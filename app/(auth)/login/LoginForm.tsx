@@ -12,6 +12,18 @@ export function LoginForm() {
   const [sent, setSent] = useState(false);
   const params = useSearchParams();
 
+  // If we landed here with auth tokens in the hash fragment
+  // (admin-generated magic links redirect that way), forward to
+  // /auth-callback which knows how to complete the session.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      const hash = window.location.hash;
+      // Clear the error query so the callback page doesn't inherit it.
+      window.location.replace('/auth-callback' + hash);
+    }
+  }, []);
+
   useEffect(() => {
     const e = params.get('error');
     if (e) setErr(e);
