@@ -51,9 +51,16 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Super admins: always allowed. Send them to /admin if they have no tenant.
+    // Super admins: always allowed. Send them to /admin if they have no tenant,
+    // but don't redirect API calls (they'd turn into HTML responses).
     if (profile.is_super_admin) {
-      if (!profile.tenant_id && path !== '/admin' && !path.startsWith('/admin/')) {
+      const isApi = path.startsWith('/api/');
+      if (
+        !profile.tenant_id &&
+        !isApi &&
+        path !== '/admin' &&
+        !path.startsWith('/admin/')
+      ) {
         const url = request.nextUrl.clone();
         url.pathname = '/admin';
         return NextResponse.redirect(url);
