@@ -36,15 +36,29 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Logged-in user: verify still on allowlist (tenant access)
+  // Logged-in user: verify still on allowlist (tenant access).
+  // Super admins are allowed through even without a tenant — they land on /admin.
   if (user && !isPublic) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('tenant_id, active')
+      .select('tenant_id, active, is_super_admin')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (!profile || !profile.active || !profile.tenant_id) {
+    if (!profile) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/denied';
+      return NextResponse.redirect(url);
+    }
+
+    // Super admins: always allowed. Send them to /admin if they have no tenant.
+    if (profile.is_super_admin) {
+      if (!profile.tenant_id && path !== '/admin' && !path.startsWith('/admin/')) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/admin';
+        return NextResponse.redirect(url);
+      }
+    } else if (!profile.active || !profile.tenant_id) {
       const url = request.nextUrl.clone();
       url.pathname = '/denied';
       return NextResponse.redirect(url);

@@ -14,19 +14,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .eq('user_id', user.id)
     .maybeSingle();
 
-  if (!profile || !profile.active || !profile.tenant_id) {
+  if (!profile) {
     redirect('/denied');
   }
 
-  const { data: tenant } = await supabase
-    .from('tenants').select('name, slug').eq('id', profile.tenant_id).maybeSingle();
+  // Super admins without a tenant can still see the app shell — they operate /admin.
+  if (!profile.is_super_admin && (!profile.active || !profile.tenant_id)) {
+    redirect('/denied');
+  }
+
+  const tenant = profile.tenant_id
+    ? (await supabase.from('tenants').select('name, slug').eq('id', profile.tenant_id).maybeSingle()).data
+    : null;
 
   return (
     <div className="flex min-h-screen">
       <Sidebar isSuperAdmin={!!profile.is_super_admin} />
       <div className="flex min-h-screen flex-1 flex-col">
         <TopBar
-          tenantName={tenant?.name || 'Workspace'}
+          tenantName={tenant?.name || (profile.is_super_admin ? 'Super Admin' : 'Workspace')}
           userEmail={profile.email}
           fullName={profile.full_name}
         />
