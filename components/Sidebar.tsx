@@ -17,16 +17,34 @@ const nav = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
-export function Sidebar({ isSuperAdmin }: { isSuperAdmin: boolean }) {
+export function Sidebar({
+  isSuperAdmin,
+  brandName,
+  brandLogo,
+}: {
+  isSuperAdmin: boolean;
+  brandName?: string;
+  brandLogo?: string | null;
+}) {
   const pathname = usePathname();
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-black/40 backdrop-blur lg:flex">
       <div className="flex h-16 items-center gap-2 border-b border-border px-5">
-        <div className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-primary/40 bg-primary-soft">
-          <div className="h-3 w-3 rounded-sm bg-primary shadow-glow" />
-        </div>
+        {brandLogo ? (
+          <img
+            src={brandLogo}
+            alt=""
+            className="h-8 w-8 rounded-lg border border-white/10 bg-white/5 object-contain"
+          />
+        ) : (
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-primary/40 bg-primary-soft">
+            <div className="h-3 w-3 rounded-sm bg-primary shadow-glow" />
+          </div>
+        )}
         <div className="leading-tight">
-          <div className="text-sm font-semibold tracking-tight text-white">Blackbox</div>
+          <div className="text-sm font-semibold tracking-tight text-white">
+            {brandName || 'Blackbox'}
+          </div>
           <div className="text-[10px] uppercase tracking-[0.25em] text-gray-500">CRM</div>
         </div>
       </div>

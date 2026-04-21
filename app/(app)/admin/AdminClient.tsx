@@ -4,7 +4,14 @@ import { useEffect, useState } from 'react';
 import { Plus, Trash2, Loader2, Users } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
-type Tenant = { id: string; name: string; slug: string };
+type Tenant = {
+  id: string;
+  name: string;
+  slug: string;
+  display_name?: string | null;
+  logo_url?: string | null;
+  primary_color?: string | null;
+};
 type Member = { id: string; email: string; tenant_id: string | null; tenant_name?: string; created_at: string };
 
 export function AdminClient() {
@@ -19,6 +26,7 @@ export function AdminClient() {
   const [mEmail, setMEmail] = useState('');
   const [mTenant, setMTenant] = useState('');
   const [addingMember, setAddingMember] = useState(false);
+  const [inviteStatus, setInviteStatus] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -50,12 +58,25 @@ export function AdminClient() {
   async function addMember(e: React.FormEvent) {
     e.preventDefault();
     setAddingMember(true);
+    setInviteStatus(null);
+    setErr(null);
     const r = await fetch('/api/admin/members', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: mEmail, tenant_id: mTenant }),
     });
+    const d = await r.json().catch(() => ({}));
     setAddingMember(false);
-    if (!r.ok) { const d = await r.json(); setErr(d.error); return; }
+    if (!r.ok) { setErr(d.error || 'Failed to add member'); return; }
+
+    // Surface the invite result so the admin knows whether an email actually went out.
+    if (d.status === 'invite_sent') {
+      setInviteStatus(`Invite email sent to ${mEmail}. They'll click the link to set a password.`);
+    } else if (d.status === 'existing_user_reset_sent') {
+      setInviteStatus(`${mEmail} already has an account — a password reset email was sent.`);
+    } else if (d.status === 'invite_failed' || d.status === 'existing_user_reset_failed') {
+      setInviteStatus(`Access granted, but email failed: ${d.message || 'unknown error'}. Ask them to use "Forgot password" at the sign-in page.`);
+    }
+
     setMEmail('');
     await load();
   }
@@ -85,13 +106,7 @@ export function AdminClient() {
         </form>
         <ul className="mt-4 divide-y divide-border text-sm">
           {tenants.map((t) => (
-            <li key={t.id} className="flex items-center justify-between py-3">
-              <div>
-                <div className="font-medium text-white">{t.name}</div>
-                <div className="text-xs text-gray-500">{t.slug}</div>
-              </div>
-              <span className="pill">ACTIVE</span>
-            </li>
+            <TenantRow key={t.id} tenant={t} onSaved={load} />
           ))}
         </ul>
       </section>
@@ -108,6 +123,12 @@ export function AdminClient() {
             Grant access
           </button>
         </form>
+
+        {inviteStatus && (
+          <div className="mt-3 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary">
+            {inviteStatus}
+          </div>
+        )}
 
         <div className="mt-6 overflow-hidden rounded-lg border border-border">
           <table className="w-full text-sm">
@@ -141,8 +162,114 @@ export function AdminClient() {
 
       <p className="text-xs text-gray-500">
         Workflow: create a workspace for each customer, then add the emails of people who should be able to log in.
-        When they visit <code className="text-primary">/login</code> and enter their email, they&apos;ll get a magic link.
+        When you grant access they get an email prompting them to set a password. After that, they sign in at
+        <code className="mx-1 text-primary">/login</code> with their email + password.
       </p>
     </div>
+  );
+}
+
+function TenantRow({ tenant, onSaved }: { tenant: Tenant; onSaved: () => Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [displayName, setDisplayName] = useState(tenant.display_name || '');
+  const [logoUrl, setLogoUrl] = useState(tenant.logo_url || '');
+  const [color, setColor] = useState(tenant.primary_color || '#8b5cf6');
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function save() {
+    setSaving(true);
+    setMsg(null);
+    const r = await fetch('/api/admin/tenants', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: tenant.id,
+        display_name: displayName,
+        logo_url: logoUrl,
+        primary_color: color,
+      }),
+    });
+    setSaving(false);
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      setMsg(d.error || 'Save failed');
+      return;
+    }
+    setMsg('Saved.');
+    await onSaved();
+  }
+
+  return (
+    <li className="py-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {tenant.logo_url ? (
+            <img src={tenant.logo_url} alt="" className="h-8 w-8 rounded-md border border-white/10 object-contain" />
+          ) : (
+            <div
+              className="h-8 w-8 rounded-md border border-white/10"
+              style={{ background: tenant.primary_color || '#8b5cf6' }}
+            />
+          )}
+          <div>
+            <div className="font-medium text-white">{tenant.display_name || tenant.name}</div>
+            <div className="text-xs text-gray-500">{tenant.slug}</div>
+          </div>
+        </div>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="text-xs text-gray-400 hover:text-primary"
+        >
+          {open ? 'Close' : 'Edit branding'}
+        </button>
+      </div>
+
+      {open && (
+        <div className="mt-3 grid gap-3 rounded-lg border border-border bg-black/30 p-4 md:grid-cols-3">
+          <div>
+            <label className="label">Display name</label>
+            <input
+              className="input"
+              placeholder={tenant.name}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">Logo URL</label>
+            <input
+              className="input"
+              placeholder="https://..."
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">Primary color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                className="h-10 w-12 cursor-pointer rounded border border-border bg-black/40"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+              />
+              <input
+                className="input"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="md:col-span-3 flex items-center justify-between">
+            <div className="text-xs text-gray-500">{msg}</div>
+            <button onClick={save} disabled={saving} className="btn btn-primary">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Save branding
+            </button>
+          </div>
+        </div>
+      )}
+    </li>
   );
 }

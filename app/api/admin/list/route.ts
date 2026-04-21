@@ -14,7 +14,7 @@ export async function GET() {
   const admin = createAdminClient();
 
   const [{ data: tenants, error: tErr }, { data: members, error: mErr }] = await Promise.all([
-    admin.from('tenants').select('id, name, slug').order('created_at', { ascending: true }),
+    admin.from('tenants').select('id, name, slug, display_name, logo_url, primary_color').order('created_at', { ascending: true }),
     admin.from('allowed_members')
       .select('id, email, tenant_id, created_at, tenants(name)')
       .order('created_at', { ascending: false }),

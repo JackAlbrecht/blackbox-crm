@@ -7,8 +7,13 @@ import { useState } from 'react';
 import { initials } from '@/lib/utils';
 
 export function TopBar({
-  tenantName, userEmail, fullName,
-}: { tenantName: string; userEmail: string; fullName: string | null }) {
+  tenantName, tenantLogo, userEmail, fullName,
+}: {
+  tenantName: string;
+  tenantLogo?: string | null;
+  userEmail: string;
+  fullName: string | null;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -22,6 +27,13 @@ export function TopBar({
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-black/50 px-6 backdrop-blur">
       <div className="flex items-center gap-3">
+        {tenantLogo ? (
+          <img
+            src={tenantLogo}
+            alt=""
+            className="h-7 w-7 rounded-md border border-white/10 bg-white/5 object-contain"
+          />
+        ) : null}
         <div className="pill">{tenantName}</div>
       </div>
 

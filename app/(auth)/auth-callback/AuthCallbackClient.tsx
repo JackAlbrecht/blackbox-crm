@@ -13,9 +13,10 @@ export function AuthCallbackClient() {
   useEffect(() => {
     (async () => {
       const supabase = createClient();
+      const next = params.get('next') || '/';
 
-      // 1) Hash fragment flow (implicit / admin-generated magic links)
-      //    e.g. #access_token=...&refresh_token=...&type=magiclink
+      // 1) Hash fragment flow (implicit / admin-generated invite + recovery links).
+      //    e.g. #access_token=...&refresh_token=...&type=invite|recovery|magiclink
       if (typeof window !== 'undefined' && window.location.hash) {
         const hash = window.location.hash.startsWith('#')
           ? window.location.hash.slice(1)
@@ -23,6 +24,7 @@ export function AuthCallbackClient() {
         const hp = new URLSearchParams(hash);
         const access_token = hp.get('access_token');
         const refresh_token = hp.get('refresh_token');
+        const type = hp.get('type');
         const hashError = hp.get('error_description') || hp.get('error');
 
         if (hashError) {
@@ -38,9 +40,14 @@ export function AuthCallbackClient() {
             router.replace(`/login?error=${encodeURIComponent(error.message)}`);
             return;
           }
-          // Clear hash so we don't leak tokens in history
-          window.history.replaceState(null, '', '/');
-          router.replace('/');
+
+          // Invite or recovery links should always force the user to set a password.
+          const forcePwReset = type === 'invite' || type === 'recovery';
+          const target = forcePwReset ? '/set-password' : next;
+
+          // Clear hash so we don't leak tokens in history.
+          window.history.replaceState(null, '', target);
+          router.replace(target);
           return;
         }
       }
@@ -54,7 +61,7 @@ export function AuthCallbackClient() {
           router.replace(`/login?error=${encodeURIComponent(error.message)}`);
           return;
         }
-        router.replace('/');
+        router.replace(next);
         return;
       }
 
@@ -71,7 +78,8 @@ export function AuthCallbackClient() {
           router.replace(`/login?error=${encodeURIComponent(error.message)}`);
           return;
         }
-        router.replace('/');
+        const forcePwReset = type === 'invite' || type === 'recovery';
+        router.replace(forcePwReset ? '/set-password' : next);
         return;
       }
 

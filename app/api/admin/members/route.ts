@@ -11,6 +11,16 @@ async function requireSuperAdmin() {
   return { user };
 }
 
+function getOrigin(req: Request) {
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (envUrl) return envUrl.replace(/\/$/, '');
+  const origin = req.headers.get('origin');
+  if (origin) return origin;
+  const host = req.headers.get('host');
+  const proto = req.headers.get('x-forwarded-proto') || 'https';
+  return host ? `${proto}://${host}` : 'https://crm.blackboxadvancements.com';
+}
+
 export async function POST(req: Request) {
   const auth = await requireSuperAdmin();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -22,21 +32,61 @@ export async function POST(req: Request) {
 
   const admin = createAdminClient();
   const normalized = String(email).trim().toLowerCase();
+  const origin = getOrigin(req);
+  const redirectTo = `${origin}/auth-callback?next=/set-password`;
 
-  // Upsert allowlist row
+  // 1) Upsert allowlist row so handle_new_user trigger can bind them to this tenant.
   const { data: row, error } = await admin
     .from('allowed_members')
     .upsert({ email: normalized, tenant_id }, { onConflict: 'email' })
     .select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // If a profile already exists for this email (user has signed in before),
-  // activate them and bind them to the new tenant.
-  await admin.from('profiles')
-    .update({ tenant_id, active: true })
-    .eq('email', normalized);
+  // 2) If a profile already exists (user has signed in before), activate them
+  //    and bind them to the new tenant. Then send them a password-reset email
+  //    so they can re-set if they want.
+  const { data: existingProfile } = await admin
+    .from('profiles')
+    .select('user_id, email')
+    .eq('email', normalized)
+    .maybeSingle();
 
-  return NextResponse.json({ member: row });
+  if (existingProfile) {
+    await admin.from('profiles')
+      .update({ tenant_id, active: true })
+      .eq('email', normalized);
+
+    // Send them a recovery (set-password) email.
+    const { error: rErr } = await admin.auth.admin.generateLink({
+      type: 'recovery',
+      email: normalized,
+      options: { redirectTo },
+    });
+
+    return NextResponse.json({
+      member: row,
+      status: rErr ? 'existing_user_reset_failed' : 'existing_user_reset_sent',
+      message: rErr?.message,
+    });
+  }
+
+  // 3) Brand-new user: send them an invite email (Supabase sends the mail via SMTP).
+  const { error: invErr } = await admin.auth.admin.inviteUserByEmail(normalized, {
+    redirectTo,
+  });
+
+  if (invErr) {
+    return NextResponse.json({
+      member: row,
+      status: 'invite_failed',
+      message: invErr.message,
+    });
+  }
+
+  return NextResponse.json({
+    member: row,
+    status: 'invite_sent',
+  });
 }
 
 export async function DELETE(req: Request) {

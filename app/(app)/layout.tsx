@@ -24,15 +24,31 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   const tenant = profile.tenant_id
-    ? (await supabase.from('tenants').select('name, slug').eq('id', profile.tenant_id).maybeSingle()).data
+    ? (await supabase
+        .from('tenants')
+        .select('name, slug, display_name, logo_url, primary_color')
+        .eq('id', profile.tenant_id)
+        .maybeSingle()).data
     : null;
 
+  const brandColor = tenant?.primary_color || '#8b5cf6';
+  const brandName = tenant?.display_name || tenant?.name || (profile.is_super_admin ? 'Super Admin' : 'Workspace');
+  const brandLogo = tenant?.logo_url || null;
+
   return (
-    <div className="flex min-h-screen">
-      <Sidebar isSuperAdmin={!!profile.is_super_admin} />
+    <div
+      className="flex min-h-screen"
+      style={{ ['--brand' as any]: brandColor }}
+    >
+      <Sidebar
+        isSuperAdmin={!!profile.is_super_admin}
+        brandName={brandName}
+        brandLogo={brandLogo}
+      />
       <div className="flex min-h-screen flex-1 flex-col">
         <TopBar
-          tenantName={tenant?.name || (profile.is_super_admin ? 'Super Admin' : 'Workspace')}
+          tenantName={brandName}
+          tenantLogo={brandLogo}
           userEmail={profile.email}
           fullName={profile.full_name}
         />
