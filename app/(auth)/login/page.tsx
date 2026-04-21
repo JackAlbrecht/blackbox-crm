@@ -1,7 +1,11 @@
+import { Suspense } from 'react';
 import { LoginForm } from './LoginForm';
 import { SplashFX } from '@/components/webgl/SplashFX';
 
 export const metadata = { title: 'Sign in · Blackbox CRM' };
+
+// Force dynamic rendering so useSearchParams in LoginForm works at request time.
+export const dynamic = 'force-dynamic';
 
 export default function LoginPage() {
   return (
@@ -25,7 +29,9 @@ export default function LoginPage() {
         </p>
 
         <div className="mt-10 w-full card p-6 shadow-glow">
-          <LoginForm />
+          <Suspense fallback={null}>
+            <LoginForm />
+          </Suspense>
         </div>
 
         <p className="mt-6 text-center text-xs text-gray-500">
