@@ -15,12 +15,25 @@ type Contact = {
 
 const LIFECYCLES = ['lead','mql','sql','opportunity','customer','evangelist'];
 
-export function ContactsTable({
-  contacts, renderOutcome,
-}: {
-  contacts: Contact[];
-  renderOutcome: (outcome: string | null) => React.ReactNode;
-}) {
+const OUTCOME_LABEL: Record<string, { label: string; tone: string }> = {
+  answered:       { label: 'Answered',       tone: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' },
+  booked:         { label: 'Booked',         tone: 'bg-primary-soft text-primary border-primary/40' },
+  callback:       { label: 'Callback',       tone: 'bg-amber-500/10 text-amber-300 border-amber-500/30' },
+  no_answer:      { label: 'No answer',      tone: 'bg-white/5 text-gray-400 border-white/10' },
+  voicemail:      { label: 'Voicemail',      tone: 'bg-white/5 text-gray-400 border-white/10' },
+  busy:           { label: 'Busy',           tone: 'bg-white/5 text-gray-400 border-white/10' },
+  not_interested: { label: 'Not interested', tone: 'bg-rose-500/10 text-rose-300 border-rose-500/30' },
+  wrong_number:   { label: 'Wrong number',   tone: 'bg-rose-500/10 text-rose-300 border-rose-500/30' },
+  do_not_call:    { label: 'Do not call',    tone: 'bg-rose-600/20 text-rose-200 border-rose-500/50' },
+};
+
+function renderOutcome(out: string | null) {
+  const meta = out ? OUTCOME_LABEL[out] : null;
+  if (!meta) return <span className="text-gray-600">—</span>;
+  return <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] uppercase tracking-wider ${meta.tone}`}>{meta.label}</span>;
+}
+
+export function ContactsTable({ contacts }: { contacts: Contact[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const router = useRouter();

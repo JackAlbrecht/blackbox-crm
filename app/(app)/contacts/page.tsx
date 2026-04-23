@@ -106,14 +106,7 @@ export default async function ContactsPage({
           {q || outcomeFilter ? 'No matches.' : 'No contacts yet. Click "New contact" to add your first, or import a CSV.'}
         </div>
       ) : (
-        <ContactsTable
-          contacts={(contacts || []) as any}
-          renderOutcome={(out) => {
-            const meta = out ? OUTCOME_LABEL[out] : null;
-            if (!meta) return <span className="text-gray-600">—</span>;
-            return <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] uppercase tracking-wider ${meta.tone}`}>{meta.label}</span>;
-          }}
-        />
+        <ContactsTable contacts={(contacts || []) as any} />
       )}
     </div>
   );
