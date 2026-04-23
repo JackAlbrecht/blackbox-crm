@@ -97,6 +97,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           tenantName={brandName}
           userEmail={profile.email}
           fullName={profile.full_name}
+          isSuperAdmin={!!profile.is_super_admin}
         />
         <main className="flex-1 p-6 lg:p-10">{children}</main>
       </div>

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
   LayoutDashboard, Users, Kanban, CheckSquare, Mail, Search, Settings, Shield, BarChart3, Workflow, Bell, Calendar as CalendarIcon,
-  PhoneCall, Building2, Activity, Menu, X,
+  PhoneCall, Building2, Activity, Menu, X, UsersRound,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,9 +24,10 @@ const nav = [
   { href: '/seo',        label: 'SEO',        icon: Search },
   { href: '/tags',       label: 'Tags',       icon: Shield },
   { href: '/settings',   label: 'Settings',   icon: Settings },
+  { href: '/team',       label: 'Team',       icon: UsersRound },
 ];
 
-export function MobileNav({ brandName }: { brandName?: string }) {
+export function MobileNav({ brandName, isSuperAdmin = false }: { brandName?: string; isSuperAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -55,7 +56,10 @@ export function MobileNav({ brandName }: { brandName?: string }) {
               </button>
             </div>
             <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
-              {nav.map(({ href, label, icon: Icon }) => {
+              {[
+                ...nav,
+                ...(isSuperAdmin ? [{ href: '/admin', label: 'Super Admin', icon: Shield }] : []),
+              ].map(({ href, label, icon: Icon }) => {
                 const active = pathname === href || pathname.startsWith(href + '/');
                 return (
                   <Link

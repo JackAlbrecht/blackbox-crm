@@ -11,12 +11,13 @@ import { useState } from 'react';
 import { initials } from '@/lib/utils';
 
 export function TopBar({
-  tenantName, userEmail, fullName,
+  tenantName, userEmail, fullName, isSuperAdmin = false,
 }: {
   tenantName: string;
-  tenantLogo?: string | null;   // kept optional for backward compat, ignored
+  tenantLogo?: string | null;
   userEmail: string;
   fullName: string | null;
+  isSuperAdmin?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -31,7 +32,7 @@ export function TopBar({
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-black/50 px-6 backdrop-blur">
       <div className="flex items-center gap-3">
-        <MobileNav brandName={tenantName} />
+        <MobileNav brandName={tenantName} isSuperAdmin={isSuperAdmin} />
         <Link
           href="/dashboard"
           className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-semibold tracking-tight text-white transition hover:bg-white/10"
