@@ -5,6 +5,7 @@ import { ArrowLeft, Building2, Globe, Phone, Mail, MapPin, Users, Kanban } from 
 import { formatCurrency } from '@/lib/utils';
 import { ActivityTimeline } from '@/components/activities/ActivityTimeline';
 import { LogActivityWidget } from '@/components/activities/LogActivityWidget';
+import { CommentThread } from '@/components/comments/CommentThread';
 
 export default async function CompanyPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -17,7 +18,7 @@ export default async function CompanyPage({ params }: { params: { id: string } }
 
   if (error || !company) notFound();
 
-  const [{ data: contacts }, { data: deals }, { data: activities }] = await Promise.all([
+  const [{ data: contacts }, { data: deals }, { data: activities }, { data: comments }] = await Promise.all([
     supabase.from('contacts')
       .select('id, first_name, last_name, email, title, phone')
       .eq('primary_company_id', params.id)
@@ -32,6 +33,7 @@ export default async function CompanyPage({ params }: { params: { id: string } }
       .eq('company_id', params.id)
       .order('occurred_at', { ascending: false })
       .limit(30),
+    supabase.from('record_comments').select('*').eq('company_id', params.id).order('created_at', { ascending: true }),
   ]);
 
   return (
@@ -135,6 +137,7 @@ export default async function CompanyPage({ params }: { params: { id: string } }
               </ul>
             )}
           </section>
+          <section className="card p-6"><CommentThread comments={comments || []} scope={{ company_id: params.id }} /></section>
         </div>
       </div>
     </div>

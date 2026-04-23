@@ -5,6 +5,7 @@ import { ArrowLeft, Kanban, Users, Building2, DollarSign, Calendar, TrendingUp }
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { ActivityTimeline } from '@/components/activities/ActivityTimeline';
 import { LogActivityWidget } from '@/components/activities/LogActivityWidget';
+import { CommentThread } from '@/components/comments/CommentThread';
 import { DealEditor } from './DealEditor';
 
 export default async function DealDetail({ params }: { params: { id: string } }) {
@@ -21,11 +22,12 @@ export default async function DealDetail({ params }: { params: { id: string } })
     .maybeSingle();
   if (error || !deal) notFound();
 
-  const [{ data: stages }, { data: activities }, { data: contacts }, { data: companies }] = await Promise.all([
+  const [{ data: stages }, { data: activities }, { data: contacts }, { data: companies }, { data: comments }] = await Promise.all([
     supabase.from('deal_stages').select('id, name, position, color, win_probability').order('position'),
     supabase.from('activities').select('*').eq('deal_id', params.id).order('occurred_at', { ascending: false }).limit(50),
     supabase.from('contacts').select('id, first_name, last_name, email, company, phone').order('first_name').limit(2000),
     supabase.from('companies').select('id, name, domain').order('name').limit(1000).then((r) => r.error ? { data: [] as any[] } : r),
+    supabase.from('record_comments').select('*').eq('deal_id', params.id).order('created_at', { ascending: true }).then((r) => r.error ? { data: [] } : r),
   ]);
 
   const probability = (deal as any).probability || (deal as any).stage?.win_probability || 0;
@@ -78,6 +80,9 @@ export default async function DealDetail({ params }: { params: { id: string } })
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Timeline</h2>
               <ActivityTimeline activities={activities || []} />
             </div>
+          </section>
+          <section className="card p-6">
+            <CommentThread comments={comments || []} scope={{ deal_id: params.id }} />
           </section>
         </div>
 

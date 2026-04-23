@@ -6,6 +6,7 @@ import { LogCallWidget } from '@/components/calls/LogCallWidget';
 import { CallHistory } from '@/components/calls/CallHistory';
 import { LogActivityWidget } from '@/components/activities/LogActivityWidget';
 import { ActivityTimeline } from '@/components/activities/ActivityTimeline';
+import { CommentThread } from '@/components/comments/CommentThread';
 import { EmailComposer } from '@/components/activities/EmailComposer';
 import { ArrowLeft } from 'lucide-react';
 
@@ -15,7 +16,7 @@ export default async function ContactDetail({ params }: { params: { id: string }
     .from('contacts').select('*').eq('id', params.id).maybeSingle();
   if (!contact) notFound();
 
-  const [{ data: calls }, activitiesRes] = await Promise.all([
+  const [{ data: calls }, activitiesRes, { data: comments }] = await Promise.all([
     supabase
       .from('call_logs')
       .select('id, outcome, notes, called_at, next_action_at, caller_id, list_id')
@@ -28,6 +29,7 @@ export default async function ContactDetail({ params }: { params: { id: string }
       .eq('contact_id', params.id)
       .order('occurred_at', { ascending: false })
       .limit(50),
+    supabase.from('record_comments').select('*').eq('contact_id', params.id).order('created_at', { ascending: true }),
   ]);
   const activities = activitiesRes.error ? [] : (activitiesRes.data || []);
 
@@ -66,6 +68,7 @@ export default async function ContactDetail({ params }: { params: { id: string }
             <ActivityTimeline activities={activities || []} />
           </div>
           <CallHistory calls={calls || []} />
+          <div className="card p-6"><CommentThread comments={comments || []} scope={{ contact_id: contact.id }} /></div>
         </div>
       </div>
     </div>
