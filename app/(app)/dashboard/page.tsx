@@ -1,23 +1,40 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { ArrowRight, Users, Kanban, CheckSquare, Mail } from 'lucide-react';
+import { ArrowRight, Users, Kanban, CheckSquare, Mail, Building2, Activity } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { AuroraHero } from '@/components/dashboard/AuroraHero';
+import { ActivityTimeline } from '@/components/activities/ActivityTimeline';
 
 export const metadata = { title: 'Dashboard · Blackbox CRM' };
+
+function greet(name?: string | null) {
+  const h = new Date().getHours();
+  const part = h < 5 ? 'Burning the midnight oil' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  return name ? `${part}, ${name.split(' ')[0]}.` : `${part}.`;
+}
 
 export default async function Dashboard() {
   const supabase = createClient();
 
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('full_name, email').eq('user_id', user.id).maybeSingle()
+    : { data: null } as any;
+
   const [
     { count: contactsCount },
+    { count: companiesCount },
     { data: deals },
     { data: tasks },
     { data: campaigns },
+    { data: recentActivities },
   ] = await Promise.all([
     supabase.from('contacts').select('*', { count: 'exact', head: true }),
+    supabase.from('companies').select('*', { count: 'exact', head: true }).then((r) => r.error ? { count: null } : r),
     supabase.from('deals').select('id, name, value, expected_close, stage:deal_stages(name, is_won, is_lost)').order('updated_at', { ascending: false }).limit(5),
     supabase.from('tasks').select('id, title, due_at, priority, completed').eq('completed', false).order('due_at', { ascending: true, nullsFirst: false }).limit(6),
     supabase.from('campaigns').select('id, name, status, sent_count, sent_at').order('created_at', { ascending: false }).limit(3),
+    supabase.from('activities').select('*').order('occurred_at', { ascending: false }).limit(8).then((r) => r.error ? { data: [] } : r),
   ]);
 
   const openDealValue = (deals || [])
@@ -25,18 +42,18 @@ export default async function Dashboard() {
     .reduce((s: number, d: any) => s + Number(d.value || 0), 0);
 
   const stats = [
-    { label: 'Contacts', value: contactsCount ?? 0, icon: Users, href: '/contacts' },
-    { label: 'Open deal value', value: formatCurrency(openDealValue), icon: Kanban, href: '/deals' },
-    { label: 'Open tasks', value: (tasks || []).length, icon: CheckSquare, href: '/tasks' },
-    { label: 'Campaigns', value: (campaigns || []).length, icon: Mail, href: '/campaigns' },
+    { label: 'Contacts',        value: contactsCount ?? 0,               icon: Users,       href: '/contacts' },
+    { label: 'Companies',       value: companiesCount ?? 0,              icon: Building2,   href: '/companies' },
+    { label: 'Open deal value', value: formatCurrency(openDealValue),    icon: Kanban,      href: '/deals' },
+    { label: 'Open tasks',      value: (tasks || []).length,             icon: CheckSquare, href: '/tasks' },
   ];
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <header>
-        <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-400">What&apos;s happening in your workspace.</p>
-      </header>
+      <AuroraHero
+        greeting={greet(profile?.full_name || profile?.email)}
+        subtitle="Every call, every lead, every deal — in one place. Here's what's moving today."
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
@@ -101,6 +118,18 @@ export default async function Dashboard() {
           )}
         </section>
       </div>
+
+      <section className="card p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400 inline-flex items-center gap-2">
+            <Activity className="h-4 w-4" /> Recent activity
+          </h2>
+          <Link href="/activities" className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+            View all <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+        <ActivityTimeline activities={recentActivities || []} />
+      </section>
     </div>
   );
 }

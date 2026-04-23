@@ -4,15 +4,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Users, Kanban, CheckSquare, Mail, Search, Settings, Shield,
-  PhoneCall, UsersRound,
+  PhoneCall, UsersRound, Building2, Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const nav = [
   { href: '/dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
   { href: '/contacts',   label: 'Contacts',   icon: Users },
-  { href: '/lead-lists', label: 'Lead lists', icon: PhoneCall },
+  { href: '/companies',  label: 'Companies',  icon: Building2 },
   { href: '/deals',      label: 'Deals',      icon: Kanban },
+  { href: '/lead-lists', label: 'Lead lists', icon: PhoneCall },
+  { href: '/activities', label: 'Activity',   icon: Activity },
   { href: '/tasks',      label: 'Tasks',      icon: CheckSquare },
   { href: '/campaigns',  label: 'Campaigns',  icon: Mail },
   { href: '/seo',        label: 'SEO',        icon: Search },
