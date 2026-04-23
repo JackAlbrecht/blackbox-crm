@@ -368,10 +368,10 @@ create table if not exists tags (
   tenant_id   uuid not null references tenants(id) on delete cascade,
   name        text not null,
   color       text,
-  created_at  timestamptz not null default now(),
-  unique (tenant_id, lower(name))
+  created_at  timestamptz not null default now()
 );
 create index if not exists tags_tenant_idx on tags(tenant_id, name);
+create unique index if not exists tags_tenant_name_uniq on tags(tenant_id, lower(name));
 
 alter table tags enable row level security;
 drop policy if exists tags_rw on tags;
