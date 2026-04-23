@@ -15,7 +15,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: { 
 
   if (q) query = query.or(`name.ilike.%${q}%,domain.ilike.%${q}%,website.ilike.%${q}%`);
 
-  const { data: companies, error } = await query;
+  const { data: companies, error } = await (query as any).then((r: any) => r, (e: any) => ({ data: [], error: e }));
 
   return (
     <div className="animate-fade-in space-y-6">

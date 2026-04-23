@@ -31,13 +31,15 @@ export default async function Dashboard() {
     { data: recentActivities },
     { data: rollup },
   ] = await Promise.all([
-    supabase.from('contacts').select('*', { count: 'exact', head: true }),
+    supabase.from('contacts').select('*', { count: 'exact', head: true }).then((r: any) => r && r.error ? { count: 0 } : r, () => ({ count: 0 })),
     supabase.from('companies').select('*', { count: 'exact', head: true }).then((r) => r.error ? { count: null } : r),
-    supabase.from('deals').select('id, name, value, expected_close, stage:deal_stages(name, is_won, is_lost)').order('updated_at', { ascending: false }).limit(5),
-    supabase.from('tasks').select('id, title, due_at, priority, completed').eq('completed', false).order('due_at', { ascending: true, nullsFirst: false }).limit(6),
-    supabase.from('campaigns').select('id, name, status, sent_count, sent_at').order('created_at', { ascending: false }).limit(3),
+    supabase.from('deals').select('id, name, value, expected_close, stage:deal_stages(name, is_won, is_lost)').order('updated_at', { ascending: false }).limit(5).then((r: any) => r && r.error ? { data: [] } : r, () => ({ data: [] })),
+    supabase.from('tasks').select('id, title, due_at, priority, completed').eq('completed', false).order('due_at', { ascending: true, nullsFirst: false }).limit(6).then((r: any) => r && r.error ? { data: [] } : r, () => ({ data: [] })),
+    supabase.from('campaigns').select('id, name, status, sent_count, sent_at').order('created_at', { ascending: false }).limit(3).then((r: any) => r && r.error ? { data: [] } : r, () => ({ data: [] })),
     supabase.from('activities').select('*').order('occurred_at', { ascending: false }).limit(8).then((r) => r.error ? { data: [] } : r),
-    supabase.from('pipeline_rollup').select('*').then((r) => r.error ? { data: [] } : r),
+    (profile?.tenant_id
+      ? supabase.from('pipeline_rollup').select('*').eq('tenant_id', profile.tenant_id)
+      : supabase.from('pipeline_rollup').select('*').eq('tenant_id', 'not-a-real-uuid')).then((r: any) => r && r.error ? { data: [] } : r, () => ({ data: [] })),
   ]);
 
   const openDealValue = (deals || [])

@@ -6,11 +6,11 @@ export const metadata = { title: 'Activity · Blackbox CRM' };
 
 export default async function ActivitiesPage() {
   const supabase = createClient();
-  const { data: activities, error } = await supabase
+  const { data: activities, error } = await (supabase
     .from('activities')
     .select('*')
     .order('occurred_at', { ascending: false })
-    .limit(100);
+    .limit(100) as any).then((r: any) => r, (e: any) => ({ data: [], error: e }));
 
   return (
     <div className="animate-fade-in space-y-6">

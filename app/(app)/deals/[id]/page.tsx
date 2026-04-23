@@ -35,12 +35,15 @@ export default async function DealDetail({ params }: { params: { id: string } })
   }
   if (error || !deal) notFound();
 
+  const safe = <T,>(p: PromiseLike<T>, fb: any) => Promise.resolve(p).then(
+    (r: any) => (r && r.error ? { data: fb } : r), () => ({ data: fb }),
+  );
   const [{ data: stages }, { data: activities }, { data: contacts }, { data: companies }, { data: comments }] = await Promise.all([
-    supabase.from('deal_stages').select('id, name, position, color, win_probability').order('position'),
-    supabase.from('activities').select('*').eq('deal_id', params.id).order('occurred_at', { ascending: false }).limit(50),
-    supabase.from('contacts').select('id, first_name, last_name, email, company, phone').order('first_name').limit(2000),
-    supabase.from('companies').select('id, name, domain').order('name').limit(1000).then((r) => r.error ? { data: [] as any[] } : r),
-    supabase.from('record_comments').select('*').eq('deal_id', params.id).order('created_at', { ascending: true }).then((r) => r.error ? { data: [] } : r),
+    safe(supabase.from('deal_stages').select('id, name, position, color, win_probability').order('position') as any, [] as any[]),
+    safe(supabase.from('activities').select('*').eq('deal_id', params.id).order('occurred_at', { ascending: false }).limit(50) as any, [] as any[]),
+    safe(supabase.from('contacts').select('id, first_name, last_name, email, company, phone').order('first_name').limit(2000) as any, [] as any[]),
+    safe(supabase.from('companies').select('id, name, domain').order('name').limit(1000) as any, [] as any[]),
+    safe(supabase.from('record_comments').select('*').eq('deal_id', params.id).order('created_at', { ascending: true }) as any, [] as any[]),
   ]);
 
   const probability = (deal as any).probability || (deal as any).stage?.win_probability || 0;

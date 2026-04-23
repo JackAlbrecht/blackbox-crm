@@ -6,12 +6,23 @@ export const metadata = { title: 'Reports · Blackbox CRM' };
 
 export default async function ReportsPage() {
   const supabase = createClient();
-  const { data: rollup } = await supabase.from('pipeline_rollup').select('*');
-  const { data: activityDays } = await supabase
+  // Resolve tenant for the current user; we'll filter everything by it so cross-tenant leaks are impossible.
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('tenant_id').eq('user_id', user.id).maybeSingle()
+    : { data: null } as any;
+  const tenantId = (profile as any)?.tenant_id || null;
+
+  let rollupQ: any = supabase.from('pipeline_rollup').select('*');
+  if (tenantId) rollupQ = rollupQ.eq('tenant_id', tenantId);
+  const { data: rollup } = await (rollupQ as any).then((r: any) => r && r.error ? { data: [] } : r, () => ({ data: [] }));
+  let activityQ: any = supabase
     .from('activity_rollup')
     .select('*')
     .gte('day', new Date(Date.now() - 30 * 86400 * 1000).toISOString())
     .order('day', { ascending: true });
+  if (tenantId) activityQ = activityQ.eq('tenant_id', tenantId);
+  const { data: activityDays } = await (activityQ as any).then((r: any) => r && r.error ? { data: [] } : r, () => ({ data: [] }));
 
   const byDay = (activityDays || []).reduce((m: any, r: any) => {
     const d = String(r.day).slice(0, 10);

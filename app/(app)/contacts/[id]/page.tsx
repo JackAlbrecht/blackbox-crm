@@ -16,22 +16,25 @@ export default async function ContactDetail({ params }: { params: { id: string }
     .from('contacts').select('*').eq('id', params.id).maybeSingle();
   if (!contact) notFound();
 
+  const safe = <T,>(p: PromiseLike<T>, fb: any) => Promise.resolve(p).then(
+    (r: any) => (r && r.error ? { data: fb } : r), () => ({ data: fb }),
+  );
   const [{ data: calls }, activitiesRes, { data: comments }] = await Promise.all([
-    supabase
+    safe(supabase
       .from('call_logs')
       .select('id, outcome, notes, called_at, next_action_at, caller_id, list_id')
       .eq('contact_id', params.id)
       .order('called_at', { ascending: false })
-      .limit(50),
-    supabase
+      .limit(50) as any, [] as any[]),
+    safe(supabase
       .from('activities')
       .select('*')
       .eq('contact_id', params.id)
       .order('occurred_at', { ascending: false })
-      .limit(50),
-    supabase.from('record_comments').select('*').eq('contact_id', params.id).order('created_at', { ascending: true }),
+      .limit(50) as any, [] as any[]),
+    safe(supabase.from('record_comments').select('*').eq('contact_id', params.id).order('created_at', { ascending: true }) as any, [] as any[]),
   ]);
-  const activities = activitiesRes.error ? [] : (activitiesRes.data || []);
+  const activities = (activitiesRes as any)?.data || [];
 
   return (
     <div className="animate-fade-in">

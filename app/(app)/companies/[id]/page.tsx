@@ -18,22 +18,25 @@ export default async function CompanyPage({ params }: { params: { id: string } }
 
   if (error || !company) notFound();
 
+  const safe = <T,>(p: PromiseLike<T>, fb: any) => Promise.resolve(p).then(
+    (r: any) => (r && r.error ? { data: fb } : r), () => ({ data: fb }),
+  );
   const [{ data: contacts }, { data: deals }, { data: activities }, { data: comments }] = await Promise.all([
-    supabase.from('contacts')
+    safe(supabase.from('contacts')
       .select('id, first_name, last_name, email, title, phone')
       .eq('primary_company_id', params.id)
-      .limit(50),
-    supabase.from('deals')
+      .limit(50) as any, [] as any[]),
+    safe(supabase.from('deals')
       .select('id, name, value, stage_id, stage:deal_stages(name, is_won, is_lost, color)')
       .eq('primary_company_id', params.id)
       .order('updated_at', { ascending: false })
-      .limit(20),
-    supabase.from('activities')
+      .limit(20) as any, [] as any[]),
+    safe(supabase.from('activities')
       .select('*')
       .eq('company_id', params.id)
       .order('occurred_at', { ascending: false })
-      .limit(30),
-    supabase.from('record_comments').select('*').eq('company_id', params.id).order('created_at', { ascending: true }),
+      .limit(30) as any, [] as any[]),
+    safe(supabase.from('record_comments').select('*').eq('company_id', params.id).order('created_at', { ascending: true }) as any, [] as any[]),
   ]);
 
   return (
