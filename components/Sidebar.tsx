@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Users, Kanban, CheckSquare, Mail, Search, Settings, Shield,
+  LayoutDashboard, Users, Kanban, CheckSquare, Mail, Search, Settings, Shield, BarChart3, Workflow, Bell,
   PhoneCall, UsersRound, Building2, Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,8 @@ const nav = [
   { href: '/deals',      label: 'Deals',      icon: Kanban },
   { href: '/lead-lists', label: 'Lead lists', icon: PhoneCall },
   { href: '/activities', label: 'Activity',   icon: Activity },
+  { href: '/reports',    label: 'Reports',    icon: BarChart3 },
+  { href: '/automations',label: 'Automations',icon: Workflow },
   { href: '/tasks',      label: 'Tasks',      icon: CheckSquare },
   { href: '/campaigns',  label: 'Campaigns',  icon: Mail },
   { href: '/seo',        label: 'SEO',        icon: Search },

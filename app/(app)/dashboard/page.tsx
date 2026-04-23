@@ -4,6 +4,7 @@ import { ArrowRight, Users, Kanban, CheckSquare, Mail, Building2, Activity } fro
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { AuroraHero } from '@/components/dashboard/AuroraHero';
 import { ActivityTimeline } from '@/components/activities/ActivityTimeline';
+import { PipelineFunnel } from '@/components/reports/PipelineFunnel';
 
 export const metadata = { title: 'Dashboard · Blackbox CRM' };
 
@@ -28,6 +29,7 @@ export default async function Dashboard() {
     { data: tasks },
     { data: campaigns },
     { data: recentActivities },
+    { data: rollup },
   ] = await Promise.all([
     supabase.from('contacts').select('*', { count: 'exact', head: true }),
     supabase.from('companies').select('*', { count: 'exact', head: true }).then((r) => r.error ? { count: null } : r),
@@ -35,6 +37,7 @@ export default async function Dashboard() {
     supabase.from('tasks').select('id, title, due_at, priority, completed').eq('completed', false).order('due_at', { ascending: true, nullsFirst: false }).limit(6),
     supabase.from('campaigns').select('id, name, status, sent_count, sent_at').order('created_at', { ascending: false }).limit(3),
     supabase.from('activities').select('*').order('occurred_at', { ascending: false }).limit(8).then((r) => r.error ? { data: [] } : r),
+    supabase.from('pipeline_rollup').select('*').then((r) => r.error ? { data: [] } : r),
   ]);
 
   const openDealValue = (deals || [])
@@ -118,6 +121,11 @@ export default async function Dashboard() {
           )}
         </section>
       </div>
+
+      <section className="card p-6">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Pipeline forecast</h2>
+        <PipelineFunnel rollup={(rollup || []) as any} />
+      </section>
 
       <section className="card p-6">
         <div className="mb-4 flex items-center justify-between">

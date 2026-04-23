@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { MobileNav } from './MobileNav';
+import { NotificationsBell } from './NotificationsBell';
 import { LogOut, ChevronDown, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -50,7 +51,9 @@ export function TopBar({
         </button>
       </div>
 
-      <div className="relative">
+      <div className="flex items-center gap-2">
+        <NotificationsBell />
+        <div className="relative">
         <button
           onClick={() => setOpen((v) => !v)}
           className="flex items-center gap-2 rounded-lg border border-border bg-black/40 px-3 py-1.5 text-sm text-gray-200 hover:bg-primary-soft"
@@ -75,6 +78,7 @@ export function TopBar({
             </button>
           </div>
         )}
+      </div>
       </div>
     </header>
   );

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Plus, Mail, Phone, Upload, PhoneCall } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { ContactSearch } from './ContactSearch';
+import { ContactsTable } from '@/components/contacts/ContactsTable';
 
 export const metadata = { title: 'Contacts · Blackbox CRM' };
 
@@ -38,7 +39,7 @@ export default async function ContactsPage({
 
   let query = supabase
     .from('contacts')
-    .select('id, first_name, last_name, email, phone, company, tags, created_at, last_call_at, last_call_outcome, next_follow_up_at')
+    .select('id, first_name, last_name, email, phone, company, tags, created_at, last_call_at, last_call_outcome, next_follow_up_at, lifecycle_stage')
     .order('created_at', { ascending: false })
     .limit(300);
 
@@ -100,73 +101,19 @@ export default async function ContactsPage({
         })}
       </div>
 
-      <div className="card overflow-hidden">
-        {(contacts || []).length === 0 ? (
-          <div className="p-12 text-center text-sm text-gray-500">
-            {q || outcomeFilter ? 'No matches.' : 'No contacts yet. Click "New contact" to add your first, or import a CSV.'}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-black/40 text-left text-[11px] uppercase tracking-wider text-gray-500">
-                <tr>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Company</th>
-                  <th className="px-4 py-3">Phone</th>
-                  <th className="px-4 py-3">Last call</th>
-                  <th className="px-4 py-3">Follow-up</th>
-                  <th className="px-4 py-3">Tags</th>
-                  <th className="px-4 py-3">Added</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(contacts || []).map((c: any) => {
-                  const name = [c.first_name, c.last_name].filter(Boolean).join(' ') || '(no name)';
-                  const meta = c.last_call_outcome ? OUTCOME_LABEL[c.last_call_outcome] : null;
-                  return (
-                    <tr key={c.id} className="table-row">
-                      <td className="px-4 py-3">
-                        <Link href={`/contacts/${c.id}`} className="font-medium text-white hover:text-primary">{name}</Link>
-                        {c.email && (
-                          <div className="mt-0.5 text-xs text-gray-500">
-                            <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1 hover:text-primary"><Mail className="h-3 w-3" />{c.email}</a>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-gray-300">{c.company || '—'}</td>
-                      <td className="px-4 py-3 text-gray-400">
-                        {c.phone ? <a href={`tel:${c.phone}`} className="inline-flex items-center gap-1 hover:text-primary"><Phone className="h-3 w-3" />{c.phone}</a> : '—'}
-                      </td>
-                      <td className="px-4 py-3">
-                        {meta ? (
-                          <div className="space-y-1">
-                            <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] uppercase tracking-wider ${meta.tone}`}>
-                              <PhoneCall className="h-3 w-3" />
-                              {meta.label}
-                            </span>
-                            <div className="text-[11px] text-gray-500">{formatDate(c.last_call_at)}</div>
-                          </div>
-                        ) : (
-                          <span className="text-[11px] uppercase tracking-wider text-gray-600">Uncalled</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-gray-300">
-                        {c.next_follow_up_at ? <span className="text-amber-400">{formatDate(c.next_follow_up_at)}</span> : '—'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-1">
-                          {(c.tags || []).slice(0, 3).map((t: string) => (<span key={t} className="pill">{t}</span>))}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">{formatDate(c.created_at)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+      {(contacts || []).length === 0 ? (
+        <div className="card p-12 text-center text-sm text-gray-500">
+          {q || outcomeFilter ? 'No matches.' : 'No contacts yet. Click "New contact" to add your first, or import a CSV.'}
+        </div>
+      ) : (
+        <ContactsTable
+          contacts={(contacts || []) as any}
+          renderOutcome={(out) => {
+            const meta = out ? OUTCOME_LABEL[out] : null;
+            if (!meta) return <span className="text-gray-600">—</span>;
+            return <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] uppercase tracking-wider ${meta.tone}`}>{meta.label}</span>;
+          }}
+        />
+      )}
   );
 }
