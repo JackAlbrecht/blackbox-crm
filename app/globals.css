@@ -80,37 +80,91 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: rgba(var(--primary-rgb), 0.45); }
 
 /* ================================================================
- * Light / dark mode
+ * Light mode — comprehensive palette so every page stays readable.
  * ================================================================
- * Theme is decided by `data-theme="light"` on <html>. Default is dark.
+ * Toggled via `html[data-theme="light"]`. Default scheme is dark.
  */
 html[data-theme="light"] {
   color-scheme: light;
+  --surface-0: #f7f8fb;
+  --surface-1: #ffffff;
+  --surface-2: #f1f5f9;
+  --ink-900:   #0f172a;
+  --ink-700:   #334155;
+  --ink-500:   #64748b;
+  --ink-400:   #94a3b8;
+  --ink-300:   #cbd5e1;
+  --border:    rgba(15, 23, 42, 0.10);
+  --border-strong: rgba(15, 23, 42, 0.16);
 }
 html[data-theme="light"] body {
   background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(var(--primary-rgb), 0.08), transparent 60%),
-    radial-gradient(900px 500px at 110% 10%, rgba(var(--accent-rgb), 0.06), transparent 55%),
-    #fafbff;
-  color: #18181b;
+    radial-gradient(1200px 600px at 10% -10%, rgba(var(--primary-rgb), 0.10), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(var(--accent-rgb), 0.08), transparent 55%),
+    var(--surface-0);
+  color: var(--ink-900);
 }
-html[data-theme="light"] .card {
-  background: rgba(255, 255, 255, 0.72);
-  border-color: rgba(15, 23, 42, 0.08);
+html[data-theme="light"] .card,
+html[data-theme="light"] .bg-card\/70,
+html[data-theme="light"] .bg-card\/95,
+html[data-theme="light"] .bg-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+html[data-theme="light"] aside,
+html[data-theme="light"] header.sticky {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: var(--border) !important;
+  backdrop-filter: saturate(1.2) blur(8px);
 }
 html[data-theme="light"] .input {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(15, 23, 42, 0.12);
-  color: #0f172a;
+  background: #ffffff;
+  border-color: var(--border-strong);
+  color: var(--ink-900);
 }
-html[data-theme="light"] .input::placeholder { color: #94a3b8; }
-html[data-theme="light"] .label { color: #475569; }
-html[data-theme="light"] .btn-ghost { color: #0f172a; border-color: rgba(15, 23, 42, 0.12); }
-html[data-theme="light"] .table-row { border-color: rgba(15, 23, 42, 0.08); }
-html[data-theme="light"] .pill { color: var(--primary); }
-html[data-theme="light"] aside { background: rgba(255, 255, 255, 0.75) !important; }
-html[data-theme="light"] header.sticky { background: rgba(255, 255, 255, 0.8) !important; }
-html[data-theme="light"] ::-webkit-scrollbar-track { background: #f1f5f9; }
+html[data-theme="light"] .input::placeholder { color: var(--ink-400); }
+html[data-theme="light"] .label { color: var(--ink-500); }
+html[data-theme="light"] .table-row { border-color: var(--border); }
+html[data-theme="light"] .table-row:hover { background-color: var(--surface-2); }
+html[data-theme="light"] .btn-ghost {
+  color: var(--ink-700);
+  background: #ffffff;
+  border-color: var(--border-strong);
+}
+html[data-theme="light"] .btn-ghost:hover { background: var(--surface-2); color: var(--ink-900); }
+
+/* Broad-stroke overrides for hardcoded Tailwind text/bg/border classes. */
+html[data-theme="light"] .text-white           { color: var(--ink-900) !important; }
+html[data-theme="light"] .text-gray-100        { color: var(--ink-900) !important; }
+html[data-theme="light"] .text-gray-200        { color: var(--ink-900) !important; }
+html[data-theme="light"] .text-gray-300        { color: var(--ink-700) !important; }
+html[data-theme="light"] .text-gray-400        { color: var(--ink-500) !important; }
+html[data-theme="light"] .text-gray-500        { color: var(--ink-500) !important; }
+html[data-theme="light"] .text-gray-600        { color: var(--ink-400) !important; }
+
+html[data-theme="light"] .bg-black\/20        { background-color: var(--surface-2) !important; }
+html[data-theme="light"] .bg-black\/30        { background-color: var(--surface-2) !important; }
+html[data-theme="light"] .bg-black\/40        { background-color: var(--surface-1) !important; }
+html[data-theme="light"] .bg-black\/50        { background-color: rgba(255,255,255,0.9) !important; }
+html[data-theme="light"] .bg-black\/60        { background-color: rgba(15,23,42,0.45) !important; }
+html[data-theme="light"] .bg-white\/5         { background-color: var(--surface-2) !important; }
+html[data-theme="light"] .bg-white\/10        { background-color: var(--surface-2) !important; }
+
+html[data-theme="light"] .border-border,
+html[data-theme="light"] .border-white\/5,
+html[data-theme="light"] .border-white\/10,
+html[data-theme="light"] .border-white\/20   { border-color: var(--border) !important; }
+html[data-theme="light"] .divide-border > *   { border-color: var(--border) !important; }
+html[data-theme="light"] kbd                  { background: var(--surface-2); color: var(--ink-700); }
+html[data-theme="light"] ::-webkit-scrollbar-track { background: var(--surface-2); }
+html[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(var(--primary-rgb), 0.35); }
+
+html[data-theme="light"] section.relative.overflow-hidden.rounded-2xl {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: var(--border) !important;
+}
+html[data-theme="light"] .gradient-text { filter: saturate(1.15); }
 
 /* ================================================================
  * Global mesh gradient background — subtle animated aurora behind everything.
