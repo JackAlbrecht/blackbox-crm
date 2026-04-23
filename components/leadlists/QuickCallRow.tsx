@@ -126,7 +126,7 @@ export function QuickCallRow({ c, listId }: { c: C; listId: string }) {
               key={key}
               onClick={() => {
                 if (c.last_call_outcome === key) { undo(); return; }
-                if (key === 'booked') { setBookingOpen(true); return; }
+                if (key === 'booked') { window.location.href = `/calendar/book/${c.id}?list=${listId}&back=${encodeURIComponent('/lead-lists/' + listId)}`; return; }
                 log(key);
               }}
               disabled={busy}
