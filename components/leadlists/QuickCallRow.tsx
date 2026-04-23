@@ -3,17 +3,53 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Phone, Mail, MessageSquare, Check, PhoneOff, Voicemail, Clock, Ban, X, Loader2, RotateCcw } from 'lucide-react';
+import { Phone, Mail, MessageSquare, Check, PhoneOff, Voicemail, Clock, Ban, X, Loader2, RotateCcw, Globe, ExternalLink } from 'lucide-react';
 import { BookingModal } from './BookingModal';
 import { formatDate } from '@/lib/utils';
 
 type C = {
   id: string; first_name: string | null; last_name: string | null;
   email: string | null; phone: string | null; company: string | null;
+  website: string | null;
   notes: string | null;
   last_call_at: string | null; last_call_outcome: string | null;
   next_follow_up_at: string | null;
 };
+
+/** Normalize a URL-ish string: add https if missing, return null if clearly not a URL. */
+function normalizeUrl(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const s = String(raw).trim();
+  if (!s) return null;
+  if (/^https?:\/\//i.test(s)) return s;
+  // Accept bare domains like "example.com" or "evergreenepoxyflooring.com"
+  if (/^[\w-]+(\.[\w-]+)+(\/.*)?$/.test(s)) return 'https://' + s;
+  return null;
+}
+/** Render a string with any URL auto-linked. */
+function linkify(text: string): (string | JSX.Element)[] {
+  const parts: (string | JSX.Element)[] = [];
+  const re = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g;
+  let last = 0; let m: RegExpExecArray | null; let i = 0;
+  while ((m = re.exec(text)) != null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    const raw = m[0];
+    const url = normalizeUrl(raw);
+    if (url) {
+      parts.push(
+        <a key={`u-${i++}`} href={url} target="_blank" rel="noopener noreferrer"
+           className="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary break-all">
+          {raw}
+        </a>,
+      );
+    } else {
+      parts.push(raw);
+    }
+    last = m.index + raw.length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
 
 // Neutral by default; only the selected/active outcome lights up in its color.
 const BASE_CLS = 'bg-black/20 text-gray-300 border-white/10 hover:bg-white/10 hover:text-white';
@@ -47,6 +83,10 @@ export function QuickCallRow({ c, listId }: { c: C; listId: string }) {
   const [justLogged, setJustLogged] = useState<string | null>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
   const router = useRouter();
+
+  // Prefer explicit website; fallback to the domain of the email.
+  const websiteUrl = normalizeUrl(c.website)
+    || (c.email && c.email.includes('@') ? normalizeUrl(c.email.split('@')[1]!) : null);
 
   async function log(outcome: string, notesText: string | null = null) {
     setBusy(true);
@@ -107,6 +147,13 @@ export function QuickCallRow({ c, listId }: { c: C; listId: string }) {
                 <Mail className="h-3 w-3" /> {c.email}
               </a>
             )}
+            {websiteUrl && (
+              <a href={websiteUrl} target="_blank" rel="noopener noreferrer"
+                 className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs text-primary hover:bg-primary/20"
+                 title="Open their website in a new tab">
+                <Globe className="h-3 w-3" /> Visit site <ExternalLink className="h-3 w-3 opacity-60" />
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -114,7 +161,7 @@ export function QuickCallRow({ c, listId }: { c: C; listId: string }) {
       {c.notes && (
         <div className="mt-3 rounded-md border-l-4 border-primary/60 bg-primary/5 px-3 py-2 text-sm text-gray-200 whitespace-pre-wrap">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-primary/80">Context · what they need</div>
-          {c.notes}
+          {linkify(c.notes)}
         </div>
       )}
 

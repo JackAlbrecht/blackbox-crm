@@ -29,7 +29,7 @@ export default async function LeadListDetail({ params }: { params: { id: string 
 
   const { data: rows } = await supabase
     .from('contact_lists')
-    .select('contact:contacts!inner(id, first_name, last_name, email, phone, company, notes, last_call_at, last_call_outcome, next_follow_up_at)')
+    .select('contact:contacts!inner(id, first_name, last_name, email, phone, company, website, notes, last_call_at, last_call_outcome, next_follow_up_at)')
     .eq('list_id', params.id)
     .limit(500);
 
