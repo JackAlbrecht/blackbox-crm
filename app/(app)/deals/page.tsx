@@ -7,7 +7,7 @@ export default async function DealsPage() {
   const supabase = createClient();
   const [{ data: stages }, { data: deals }, { data: contacts }] = await Promise.all([
     supabase.from('deal_stages').select('*').order('position', { ascending: true }),
-    supabase.from('deals').select('*').order('position', { ascending: true }),
+    supabase.from('deals').select('*').order('updated_at', { ascending: false }).limit(2000),
     supabase.from('contacts').select('id, first_name, last_name, company'),
   ]);
 
