@@ -8,6 +8,14 @@ type Event = { id: string; type: string; subject: string | null; at: string; dur
 
 export function CalendarView({ year, month, events }: { year: number; month: number; events: Event[] }) {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [feedUrl, setFeedUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function reveal() {
+    if (feedUrl) { navigator.clipboard.writeText(feedUrl).catch(()=>{}); setCopied(true); setTimeout(() => setCopied(false), 1500); return; }
+    const r = await fetch('/api/calendar/feed-url'); const j = await r.json();
+    if (j.url) { setFeedUrl(j.url); navigator.clipboard.writeText(j.url).catch(()=>{}); setCopied(true); setTimeout(() => setCopied(false), 1500); }
+  }
 
   const first = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -42,6 +50,12 @@ export function CalendarView({ year, month, events }: { year: number; month: num
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="card p-4">
+        <div className="mb-2 flex items-center justify-end gap-2 px-2">
+          <button onClick={reveal} className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs text-primary hover:bg-primary/20" title="Copy a subscribe URL to use in Google / Apple / Outlook Calendar">
+            {copied ? 'Copied ✓' : (feedUrl ? 'Copy subscribe URL again' : 'Subscribe in Google Calendar')}
+          </button>
+          {feedUrl && <a href={feedUrl} className="inline-flex items-center rounded-md border border-border bg-black/30 px-2 py-1.5 text-[10px] text-gray-400 hover:text-primary" target="_blank" rel="noopener">Open .ics</a>}
+        </div>
         <div className="flex items-center justify-between px-2 pb-3">
           <button onClick={() => moveMonth(-1)} className="rounded-md border border-border p-1.5 text-gray-400 hover:text-primary"><ChevronLeft className="h-4 w-4" /></button>
           <div className="text-sm font-semibold uppercase tracking-wider text-white">{monthName} {year}</div>
