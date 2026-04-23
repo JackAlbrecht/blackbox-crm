@@ -87,7 +87,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="flex min-h-screen flex-1 flex-col">
         <TopBar
           tenantName={brandName}
-          tenantLogo={brandLogo}
           userEmail={profile.email}
           fullName={profile.full_name}
         />

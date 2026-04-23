@@ -7,10 +7,10 @@ import { useState } from 'react';
 import { initials } from '@/lib/utils';
 
 export function TopBar({
-  tenantName, tenantLogo, userEmail, fullName,
+  tenantName, userEmail, fullName,
 }: {
   tenantName: string;
-  tenantLogo?: string | null;
+  tenantLogo?: string | null;   // kept optional for backward compat, ignored
   userEmail: string;
   fullName: string | null;
 }) {
@@ -27,14 +27,12 @@ export function TopBar({
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-black/50 px-6 backdrop-blur">
       <div className="flex items-center gap-3">
-        {tenantLogo ? (
-          <img
-            src={tenantLogo}
-            alt=""
-            className="h-7 w-7 rounded-md border border-white/10 bg-white/5 object-contain"
-          />
-        ) : null}
-        <div className="pill">{tenantName}</div>
+        <div
+          className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-semibold tracking-tight text-white"
+          style={{ color: 'var(--brand, #fff)' }}
+        >
+          {tenantName}
+        </div>
       </div>
 
       <div className="relative">
@@ -42,7 +40,10 @@ export function TopBar({
           onClick={() => setOpen((v) => !v)}
           className="flex items-center gap-2 rounded-lg border border-border bg-black/40 px-3 py-1.5 text-sm text-gray-200 hover:bg-primary-soft"
         >
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
+          <div
+            className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold text-white"
+            style={{ backgroundColor: 'var(--primary)' }}
+          >
             {initials(fullName || userEmail)}
           </div>
           <span className="hidden sm:inline">{fullName || userEmail}</span>
