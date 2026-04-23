@@ -4,6 +4,16 @@
 
 :root {
   color-scheme: dark;
+  /* Defaults — overridden at the app-layout root for each tenant. */
+  --primary: #a855f7;
+  --primary-rgb: 168 85 247;
+  --primary-soft: rgba(168, 85, 247, 0.12);
+  --primary-soft-hover: rgba(168, 85, 247, 0.22);
+  --primary-glow: rgba(168, 85, 247, 0.35);
+  --accent: #22d3ee;
+  --accent-rgb: 34 211 238;
+  --accent-soft: rgba(34, 211, 238, 0.12);
+  --brand: #a855f7;
 }
 
 html, body { background: #05060c; color: #e5e7eb; }
@@ -13,8 +23,8 @@ body {
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(168, 85, 247, 0.14), transparent 60%),
-    radial-gradient(900px 500px at 110% 10%, rgba(34, 211, 238, 0.10), transparent 55%),
+    radial-gradient(1200px 600px at 10% -10%, rgba(var(--primary-rgb), 0.14), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(var(--accent-rgb), 0.10), transparent 55%),
     #05060c;
 }
 
@@ -26,27 +36,45 @@ body {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition;
   }
   .btn-primary {
-    @apply bg-primary text-white hover:bg-primary-deep shadow-glow;
+    background-color: var(--primary);
+    color: white;
+    box-shadow: 0 0 40px var(--primary-glow);
   }
+  .btn-primary:hover { filter: brightness(1.08); }
   .btn-ghost {
-    @apply text-gray-200 hover:bg-primary-soft border border-border;
+    @apply text-gray-200 border border-border;
+    background-color: transparent;
   }
+  .btn-ghost:hover { background-color: var(--primary-soft); }
   .input {
-    @apply w-full rounded-lg border border-border bg-black/30 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary;
+    @apply w-full rounded-lg border border-border bg-black/30 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary);
   }
   .label {
     @apply block text-xs font-medium uppercase tracking-wider text-gray-400 mb-1.5;
   }
   .pill {
-    @apply inline-flex items-center rounded-full border border-border bg-primary-soft px-2.5 py-0.5 text-xs text-primary;
+    display: inline-flex; align-items: center; border-radius: 9999px;
+    border: 1px solid rgba(var(--primary-rgb), 0.25);
+    background-color: var(--primary-soft);
+    color: var(--primary);
+    padding: 0.125rem 0.625rem; font-size: 0.75rem;
   }
   .table-row {
-    @apply border-b border-border hover:bg-primary-soft/40 transition;
+    @apply border-b border-border transition;
   }
+  .table-row:hover { background-color: var(--primary-soft); }
+  .bg-primary-soft { background-color: var(--primary-soft); }
+  .bg-cyan-soft { background-color: var(--accent-soft); }
+  .shadow-glow { box-shadow: 0 0 40px var(--primary-glow); }
 }
 
-/* Light scrollbar tuning */
+/* Scrollbar uses the tenant's primary color too. */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: #05060c; }
-::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.25); border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.45); }
+::-webkit-scrollbar-thumb { background: rgba(var(--primary-rgb), 0.25); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(var(--primary-rgb), 0.45); }

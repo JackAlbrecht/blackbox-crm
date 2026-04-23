@@ -3,6 +3,14 @@ export type Tenant = {
   name: string;
   slug: string;
   created_at: string;
+  display_name?: string | null;
+  tagline?: string | null;
+  primary_color?: string | null;
+  accent_color?: string | null;
+  logo_url?: string | null;
+  logo_wide_url?: string | null;
+  favicon_url?: string | null;
+  login_bg_url?: string | null;
 };
 
 export type Profile = {
@@ -12,6 +20,7 @@ export type Profile = {
   full_name: string | null;
   active: boolean;
   is_super_admin: boolean;
+  is_tenant_admin?: boolean;
   created_at: string;
 };
 
