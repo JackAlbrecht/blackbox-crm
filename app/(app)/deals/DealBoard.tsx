@@ -87,7 +87,11 @@ export function DealBoard({ initialStages, initialDeals, contacts }: Props) {
                               ref={prov.innerRef}
                               {...prov.draggableProps}
                               {...prov.dragHandleProps}
-                              onClick={() => setEditing(deal)}
+                              onClick={(e) => {
+                                if (snap.isDragging) return;
+                                if ((e.target as HTMLElement).closest('[data-nav]')) return;
+                                window.location.href = `/deals/${deal.id}`;
+                              }}
                               className={cn(
                                 'cursor-pointer rounded-lg border border-border bg-card p-3 text-sm transition hover:border-primary/50',
                                 snap.isDragging && 'shadow-glow',
