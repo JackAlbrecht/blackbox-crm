@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { Plus, Upload, ListChecks } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { RealtimeRefresh } from '@/components/realtime/RealtimeRefresh';
 
 export const metadata = { title: 'Lead lists · Blackbox CRM' };
 
@@ -35,6 +36,7 @@ export default async function LeadListsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <RealtimeRefresh tables={['lead_lists','contact_lists','call_logs']} />
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-white">Lead lists</h1>

@@ -5,6 +5,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { AuroraHero } from '@/components/dashboard/AuroraHero';
 import { ActivityTimeline } from '@/components/activities/ActivityTimeline';
 import { PipelineFunnel } from '@/components/reports/PipelineFunnel';
+import { RealtimeRefresh } from '@/components/realtime/RealtimeRefresh';
 
 export const metadata = { title: 'Dashboard · Blackbox CRM' };
 
@@ -55,6 +56,7 @@ export default async function Dashboard() {
 
   return (
     <div className="space-y-8 animate-fade-in">
+      <RealtimeRefresh tables={['contacts','deals','activities','call_logs']} />
       <AuroraHero
         greeting={greet(profile?.full_name || profile?.email)}
         subtitle="Every call, every lead, every deal — in one place. Here's what's moving today."

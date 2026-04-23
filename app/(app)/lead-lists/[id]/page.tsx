@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ArrowLeft, Mail, Phone, PhoneCall } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { RealtimeRefresh } from '@/components/realtime/RealtimeRefresh';
 
 const OUTCOME_LABEL: Record<string, { label: string; tone: string }> = {
   answered:       { label: 'Answered',       tone: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' },
@@ -46,6 +47,7 @@ export default async function LeadListDetail({ params }: { params: { id: string 
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <RealtimeRefresh tables={['lead_lists','contact_lists','call_logs']} />
       <Link href="/lead-lists" className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-primary">
         <ArrowLeft className="h-4 w-4" /> All lists
       </Link>

@@ -4,6 +4,7 @@ import { Plus, Mail, Phone, Upload, PhoneCall } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { ContactSearch } from './ContactSearch';
 import { ContactsTable } from '@/components/contacts/ContactsTable';
+import { RealtimeRefresh } from '@/components/realtime/RealtimeRefresh';
 
 export const metadata = { title: 'Contacts · Blackbox CRM' };
 
@@ -65,6 +66,7 @@ export default async function ContactsPage({
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <RealtimeRefresh tables={['contacts','call_logs','activities']} />
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-white">Contacts</h1>

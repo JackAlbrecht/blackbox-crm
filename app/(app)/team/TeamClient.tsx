@@ -18,10 +18,12 @@ export function TeamClient({
   me,
   tenantName,
   initialMembers,
+  canManage = false,
 }: {
   me: { user_id: string; is_super_admin: boolean; is_tenant_admin: boolean };
   tenantName: string;
   initialMembers: Member[];
+  canManage?: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -107,7 +109,7 @@ export function TeamClient({
         </p>
       </header>
 
-      <div className="card p-6">
+      {canManage && <div className="card p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Add team member</h2>
         <form onSubmit={addMember} className="space-y-4">
           <div className="grid gap-3 md:grid-cols-2">
@@ -150,7 +152,7 @@ export function TeamClient({
             )}
           </div>
         </form>
-      </div>
+      </div>}
 
       <div className="card overflow-hidden">
         <div className="border-b border-border px-5 py-3">
@@ -194,7 +196,7 @@ export function TeamClient({
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {!m.is_super_admin && m.user_id !== me.user_id && (
+                  {canManage && !m.is_super_admin && m.user_id !== me.user_id && (
                     <div className="inline-flex items-center gap-1">
                       <button
                         onClick={() => toggleAdmin(m)}

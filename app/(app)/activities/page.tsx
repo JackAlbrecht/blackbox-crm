@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { ActivityTimeline } from '@/components/activities/ActivityTimeline';
 import { Activity as ActivityIcon } from 'lucide-react';
+import { RealtimeRefresh } from '@/components/realtime/RealtimeRefresh';
 
 export const metadata = { title: 'Activity · Blackbox CRM' };
 
@@ -14,6 +15,7 @@ export default async function ActivitiesPage() {
 
   return (
     <div className="animate-fade-in space-y-6">
+      <RealtimeRefresh tables={['activities','call_logs']} />
       <header>
         <h1 className="text-2xl font-semibold text-white">Activity feed</h1>
         <p className="mt-1 text-sm text-gray-400">

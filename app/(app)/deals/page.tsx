@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { DealBoard } from './DealBoard';
+import { RealtimeRefresh } from '@/components/realtime/RealtimeRefresh';
 
 export const metadata = { title: 'Deals · Blackbox CRM' };
 
@@ -13,6 +14,7 @@ export default async function DealsPage() {
 
   return (
     <div className="animate-fade-in space-y-6">
+      <RealtimeRefresh tables={['deals','activities']} />
       <header>
         <h1 className="text-2xl font-semibold text-white">Deals</h1>
         <p className="mt-1 text-sm text-gray-400">Drag cards between stages. Click a deal to edit it.</p>

@@ -102,7 +102,7 @@ export function Sidebar({
           );
         })}
 
-        {canManageTeam && (
+        {(
           <Link
             href="/team"
             className={cn(

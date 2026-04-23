@@ -16,15 +16,9 @@ export default async function TeamPage() {
     .eq('user_id', user.id)
     .maybeSingle();
 
-  if (!me?.is_super_admin && !me?.is_tenant_admin) {
-    return (
-      <div className="max-w-2xl animate-fade-in">
-        <h1 className="text-2xl font-semibold text-white">Team</h1>
-        <p className="mt-3 text-sm text-gray-400">
-          Only workspace owners can manage team members. Ask your admin for access.
-        </p>
-      </div>
-    );
+  // Every tenant member can view the team. Admin-only actions are still gated in the client.
+  if (!me) {
+    return <div className="max-w-2xl animate-fade-in"><h1 className="text-2xl font-semibold text-white">Team</h1><p className="mt-3 text-sm text-gray-400">No profile found.</p></div>;
   }
 
   const { data: tenant } = me?.tenant_id
@@ -42,6 +36,7 @@ export default async function TeamPage() {
       me={me}
       tenantName={tenant?.name || 'Your workspace'}
       initialMembers={members || []}
+      canManage={!!(me.is_super_admin || me.is_tenant_admin)}
     />
   );
 }
