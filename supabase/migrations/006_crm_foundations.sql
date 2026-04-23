@@ -256,6 +256,35 @@ create table if not exists activities (
   meta           jsonb not null default '{}'::jsonb,
   created_at     timestamptz not null default now()
 );
+-- Defensive: if a prior schema had an `activities` table with fewer columns,
+-- bring it up to spec. (add column if not exists is a no-op when present.)
+alter table activities add column if not exists activity_type  text;
+alter table activities add column if not exists subject        text;
+alter table activities add column if not exists body           text;
+alter table activities add column if not exists contact_id     uuid references contacts(id)  on delete set null;
+alter table activities add column if not exists deal_id        uuid references deals(id)     on delete set null;
+alter table activities add column if not exists company_id     uuid references companies(id) on delete set null;
+alter table activities add column if not exists user_id        uuid references auth.users(id) on delete set null;
+alter table activities add column if not exists occurred_at    timestamptz not null default now();
+alter table activities add column if not exists duration_sec   int;
+alter table activities add column if not exists outcome        text;
+alter table activities add column if not exists meta           jsonb not null default '{}'::jsonb;
+alter table activities add column if not exists created_at     timestamptz not null default now();
+-- Backfill a default type for any existing rows so the not-null check survives.
+update activities set activity_type = coalesce(activity_type, 'note') where activity_type is null;
+-- Now enforce NOT NULL + CHECK on activity_type (drop+recreate check is safe if one already exists).
+alter table activities alter column activity_type set not null;
+do $act$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'activities'::regclass and conname = 'activities_activity_type_check'
+  ) then
+    alter table activities add constraint activities_activity_type_check
+      check (activity_type in ('call','email','meeting','note','task','stage_change','status_change','file','sms'));
+  end if;
+end $act$;
+
 create index if not exists activities_contact_idx  on activities(contact_id, occurred_at desc);
 create index if not exists activities_deal_idx     on activities(deal_id, occurred_at desc);
 create index if not exists activities_company_idx  on activities(company_id, occurred_at desc);
