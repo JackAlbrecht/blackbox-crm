@@ -16,6 +16,7 @@ const nav = [
   { href: '/deals',      label: 'Deals',      icon: Kanban },
   { href: '/lead-lists', label: 'Lead lists', icon: PhoneCall },
   { href: '/activities', label: 'Activity',   icon: Activity },
+  { href: '/calendar',   label: 'Calendar',   icon: Calendar },
   { href: '/reports',    label: 'Reports',    icon: BarChart3 },
   { href: '/automations',label: 'Automations',icon: Workflow },
   { href: '/tasks',      label: 'Tasks',      icon: CheckSquare },

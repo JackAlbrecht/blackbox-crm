@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Phone, Mail, MessageSquare, Check, PhoneOff, Voicemail, Clock, Ban, X, Loader2 } from 'lucide-react';
+import { BookingModal } from './BookingModal';
 import { formatDate } from '@/lib/utils';
 
 type C = {
@@ -44,6 +45,7 @@ export function QuickCallRow({ c, listId }: { c: C; listId: string }) {
   const [notesOpen, setNotesOpen] = useState(false);
   const [notes, setNotes] = useState('');
   const [justLogged, setJustLogged] = useState<string | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
   const router = useRouter();
 
   async function log(outcome: string, notesText: string | null = null) {
@@ -114,7 +116,7 @@ export function QuickCallRow({ c, listId }: { c: C; listId: string }) {
           return (
             <button
               key={key}
-              onClick={() => log(key)}
+              onClick={() => key === 'booked' ? setBookingOpen(true) : log(key)}
               disabled={busy}
               className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition ${
                 isSelected ? active : BASE_CLS
@@ -147,6 +149,14 @@ export function QuickCallRow({ c, listId }: { c: C; listId: string }) {
           </button>
         </div>
       )}
+
+      <BookingModal
+        open={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+        onSaved={() => { setJustLogged('booked'); setTimeout(() => setJustLogged(null), 1500); router.refresh(); }}
+        contact={c}
+        listId={listId}
+      />
     </div>
   );
 }
