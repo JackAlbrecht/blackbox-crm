@@ -12,14 +12,27 @@ export default async function DealDetail({ params }: { params: { id: string } })
   const supabase = createClient();
   const { data: deal, error } = await supabase
     .from('deals')
-    .select(`
-      *,
-      stage:deal_stages(id, name, color, win_probability, is_won, is_lost),
-      contact:contacts(id, first_name, last_name, email, phone, title),
-      company:companies!deals_primary_company_id_fkey(id, name, domain, industry)
-    `)
+    .select('*, stage:deal_stages(id, name, color, win_probability, is_won, is_lost)')
     .eq('id', params.id)
     .maybeSingle();
+
+  // Fetch related contact + company separately (avoids PostgREST multi-FK embed ambiguity).
+  const relatedPromises: Promise<any>[] = [];
+  relatedPromises.push(
+    deal?.contact_id
+      ? supabase.from('contacts').select('id, first_name, last_name, email, phone, title').eq('id', deal.contact_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  );
+  relatedPromises.push(
+    (deal as any)?.primary_company_id
+      ? supabase.from('companies').select('id, name, domain, industry').eq('id', (deal as any).primary_company_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  );
+  const [{ data: contact }, { data: company }] = await Promise.all(relatedPromises as any);
+  if (deal) {
+    (deal as any).contact = contact;
+    (deal as any).company = company;
+  }
   if (error || !deal) notFound();
 
   const [{ data: stages }, { data: activities }, { data: contacts }, { data: companies }, { data: comments }] = await Promise.all([
