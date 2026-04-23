@@ -53,9 +53,17 @@ export function DealBoard({ initialStages, initialDeals, contacts }: Props) {
             const total = list.reduce((s, d) => s + Number(d.value || 0), 0);
             return (
               <div key={stage.id} className="flex w-72 shrink-0 flex-col rounded-xl border border-border bg-black/30">
+                <div className="h-1" style={{ background: (stage as any).color || 'transparent' }} />
                 <header className="flex items-center justify-between border-b border-border px-3 py-2.5">
                   <div>
-                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-300">{stage.name}</div>
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-300">
+                      <span>{stage.name}</span>
+                      {(stage as any).win_probability != null && (stage as any).win_probability > 0 && (
+                        <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-normal text-gray-400">
+                          {(stage as any).win_probability}%
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[11px] text-gray-500">{list.length} · {formatCurrency(total)}</div>
                   </div>
                   <button onClick={() => setCreatingInStage(stage.id)} className="rounded-md p-1 text-gray-400 hover:bg-primary-soft hover:text-primary">
@@ -90,6 +98,17 @@ export function DealBoard({ initialStages, initialDeals, contacts }: Props) {
                                 <span className="text-primary">{formatCurrency(deal.value)}</span>
                                 <span className="text-gray-500">{deal.expected_close ? formatDate(deal.expected_close) : ''}</span>
                               </div>
+                              {((deal as any).probability || (stage as any).win_probability) ? (
+                                <div className="mt-2 h-1 rounded-full bg-white/5">
+                                  <div
+                                    className="h-1 rounded-full"
+                                    style={{
+                                      width: `${(deal as any).probability || (stage as any).win_probability || 0}%`,
+                                      background: (stage as any).color || 'var(--primary, #6366f1)',
+                                    }}
+                                  />
+                                </div>
+                              ) : null}
                             </div>
                           )}
                         </Draggable>

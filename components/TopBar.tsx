@@ -1,7 +1,7 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
-import { LogOut, ChevronDown } from 'lucide-react';
+import { LogOut, ChevronDown, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { initials } from '@/lib/utils';
@@ -33,6 +33,19 @@ export function TopBar({
         >
           {tenantName}
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            // dispatch a synthetic ⌘K to open the palette
+            const ev = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true });
+            window.dispatchEvent(ev);
+          }}
+          className="ml-2 hidden items-center gap-2 rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-gray-400 hover:text-primary hover:border-primary/40 sm:inline-flex"
+        >
+          <Search className="h-3.5 w-3.5" />
+          <span>Search…</span>
+          <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+        </button>
       </div>
 
       <div className="relative">

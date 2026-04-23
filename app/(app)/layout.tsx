@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/Sidebar';
 import { TopBar } from '@/components/TopBar';
+import { CommandPalette } from '@/components/palette/CommandPalette';
 
 // Very light color helpers so a tenant's primary color themes the whole app.
 function hexToRgb(hex: string): [number, number, number] | null {
@@ -92,6 +93,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         />
         <main className="flex-1 p-6 lg:p-10">{children}</main>
       </div>
+      <CommandPalette />
     </div>
   );
 }

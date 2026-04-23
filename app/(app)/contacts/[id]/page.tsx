@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { ContactForm } from '@/components/forms/ContactForm';
 import { LogCallWidget } from '@/components/calls/LogCallWidget';
 import { CallHistory } from '@/components/calls/CallHistory';
+import { LogActivityWidget } from '@/components/activities/LogActivityWidget';
+import { ActivityTimeline } from '@/components/activities/ActivityTimeline';
 import { ArrowLeft } from 'lucide-react';
 
 export default async function ContactDetail({ params }: { params: { id: string } }) {
@@ -12,12 +14,21 @@ export default async function ContactDetail({ params }: { params: { id: string }
     .from('contacts').select('*').eq('id', params.id).maybeSingle();
   if (!contact) notFound();
 
-  const { data: calls } = await supabase
-    .from('call_logs')
-    .select('id, outcome, notes, called_at, next_action_at, caller_id, list_id')
-    .eq('contact_id', params.id)
-    .order('called_at', { ascending: false })
-    .limit(50);
+  const [{ data: calls }, activitiesRes] = await Promise.all([
+    supabase
+      .from('call_logs')
+      .select('id, outcome, notes, called_at, next_action_at, caller_id, list_id')
+      .eq('contact_id', params.id)
+      .order('called_at', { ascending: false })
+      .limit(50),
+    supabase
+      .from('activities')
+      .select('*')
+      .eq('contact_id', params.id)
+      .order('occurred_at', { ascending: false })
+      .limit(50),
+  ]);
+  const activities = activitiesRes.error ? [] : (activitiesRes.data || []);
 
   return (
     <div className="animate-fade-in">
@@ -39,6 +50,14 @@ export default async function ContactDetail({ params }: { params: { id: string }
 
         <div className="space-y-6">
           <LogCallWidget contactId={contact.id} phone={contact.phone} />
+          <div className="card p-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Log activity</h2>
+            <LogActivityWidget scope={{ contact_id: contact.id }} />
+          </div>
+          <div className="card p-6">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Timeline</h2>
+            <ActivityTimeline activities={activities || []} />
+          </div>
           <CallHistory calls={calls || []} />
         </div>
       </div>

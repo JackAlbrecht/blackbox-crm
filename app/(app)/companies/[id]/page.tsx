@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, Building2, Globe, Phone, Mail, MapPin, Users, Kanban } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { ActivityTimeline } from '@/components/activities/ActivityTimeline';
+import { LogActivityWidget } from '@/components/activities/LogActivityWidget';
 
 export default async function CompanyPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -77,11 +78,15 @@ export default async function CompanyPage({ params }: { params: { id: string } }
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <section className="card p-6 lg:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">Activity</h2>
+        <section className="card p-6 lg:col-span-2 space-y-6">
+          <div>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Log activity</h2>
+            <LogActivityWidget scope={{ company_id: params.id }} />
           </div>
-          <ActivityTimeline activities={activities || []} />
+          <div className="border-t border-border pt-5">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Timeline</h2>
+            <ActivityTimeline activities={activities || []} />
+          </div>
         </section>
 
         <div className="space-y-6">
