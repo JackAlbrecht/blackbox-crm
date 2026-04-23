@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { MobileNav } from './MobileNav';
 import { NotificationsBell } from './NotificationsBell';
@@ -31,12 +32,13 @@ export function TopBar({
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-black/50 px-6 backdrop-blur">
       <div className="flex items-center gap-3">
         <MobileNav brandName={tenantName} />
-        <div
-          className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-semibold tracking-tight text-white"
+        <Link
+          href="/dashboard"
+          className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-semibold tracking-tight text-white transition hover:bg-white/10"
           style={{ color: 'var(--brand, #fff)' }}
         >
           {tenantName}
-        </div>
+        </Link>
         <button
           type="button"
           onClick={() => {

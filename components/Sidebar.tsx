@@ -44,8 +44,8 @@ export function Sidebar({
 
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-black/40 backdrop-blur lg:flex">
-      {/* Brand header — big, centered treatment so the tenant's logo is the hero. */}
-      <div className="flex flex-col items-center gap-2 border-b border-border px-5 py-6">
+      {/* Brand header — click the logo/name to jump home. */}
+      <Link href="/dashboard" className="flex flex-col items-center gap-2 border-b border-border px-5 py-6 transition hover:bg-white/5">
         {brandLogoWide ? (
           <img
             src={brandLogoWide}
@@ -77,7 +77,7 @@ export function Sidebar({
             {tagline || 'CRM'}
           </div>
         </div>
-      </div>
+      </Link>
 
       <nav className="flex-1 space-y-1 p-3">
         {nav.map(({ href, label, icon: Icon }) => {
