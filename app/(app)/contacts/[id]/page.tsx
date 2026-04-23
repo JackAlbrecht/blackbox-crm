@@ -6,6 +6,7 @@ import { LogCallWidget } from '@/components/calls/LogCallWidget';
 import { CallHistory } from '@/components/calls/CallHistory';
 import { LogActivityWidget } from '@/components/activities/LogActivityWidget';
 import { ActivityTimeline } from '@/components/activities/ActivityTimeline';
+import { EmailComposer } from '@/components/activities/EmailComposer';
 import { ArrowLeft } from 'lucide-react';
 
 export default async function ContactDetail({ params }: { params: { id: string } }) {
@@ -50,6 +51,12 @@ export default async function ContactDetail({ params }: { params: { id: string }
 
         <div className="space-y-6">
           <LogCallWidget contactId={contact.id} phone={contact.phone} />
+          {contact.email && (
+            <div className="card p-4 flex items-center justify-between">
+              <div className="text-xs text-gray-500">Send an email and log it to the timeline.</div>
+              <EmailComposer contactId={contact.id} toEmail={contact.email} toName={[contact.first_name, contact.last_name].filter(Boolean).join(' ')} />
+            </div>
+          )}
           <div className="card p-6">
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Log activity</h2>
             <LogActivityWidget scope={{ contact_id: contact.id }} />

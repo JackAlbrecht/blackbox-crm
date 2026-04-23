@@ -1,6 +1,7 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
+import { MobileNav } from './MobileNav';
 import { LogOut, ChevronDown, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -27,6 +28,7 @@ export function TopBar({
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-black/50 px-6 backdrop-blur">
       <div className="flex items-center gap-3">
+        <MobileNav brandName={tenantName} />
         <div
           className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-semibold tracking-tight text-white"
           style={{ color: 'var(--brand, #fff)' }}
