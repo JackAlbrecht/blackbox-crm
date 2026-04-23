@@ -14,15 +14,12 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from('profiles').select('tenant_id').eq('user_id', user.id).maybeSingle();
-  if (!profile?.tenant_id) {
-    return NextResponse.json({ error: 'No workspace assigned' }, { status: 403 });
-  }
-
-  // Make sure the contact belongs to this tenant (RLS will enforce too).
-  const { data: contact } = await supabase
+  // RLS on contacts already limits this to the caller's tenant — don't require
+  // a separate profile lookup here (if the profiles policy ever gets weird, this
+  // endpoint still works).
+  const { data: contact, error: contactErr } = await supabase
     .from('contacts').select('id, tenant_id').eq('id', params.id).maybeSingle();
+  if (contactErr) return NextResponse.json({ error: contactErr.message }, { status: 400 });
   if (!contact) return NextResponse.json({ error: 'Contact not found' }, { status: 404 });
 
   const body = await req.json().catch(() => ({}));

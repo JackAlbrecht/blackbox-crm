@@ -13,15 +13,17 @@ type C = {
   next_follow_up_at: string | null;
 };
 
+// Neutral by default; only the selected/active outcome lights up in its color.
+const BASE_CLS = 'bg-black/20 text-gray-300 border-white/10 hover:bg-white/10 hover:text-white';
 const OUTCOMES = [
-  { key: 'booked',         label: 'Booked',         cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30', icon: Check },
-  { key: 'answered',       label: 'Answered',       cls: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25', icon: Phone },
-  { key: 'callback',       label: 'Callback',       cls: 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/25', icon: Clock },
-  { key: 'no_answer',      label: 'No answer',      cls: 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10', icon: PhoneOff },
-  { key: 'voicemail',      label: 'Voicemail',      cls: 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10', icon: Voicemail },
-  { key: 'not_interested', label: 'Not interested', cls: 'bg-rose-500/10 text-rose-300 border-rose-500/30 hover:bg-rose-500/25', icon: X },
-  { key: 'wrong_number',   label: 'Wrong #',        cls: 'bg-rose-500/10 text-rose-300 border-rose-500/30 hover:bg-rose-500/25', icon: X },
-  { key: 'do_not_call',    label: 'DNC',            cls: 'bg-rose-600/20 text-rose-200 border-rose-500/50 hover:bg-rose-600/35', icon: Ban },
+  { key: 'booked',         label: 'Booked',         active: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50', icon: Check },
+  { key: 'answered',       label: 'Answered',       active: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40', icon: Phone },
+  { key: 'callback',       label: 'Callback',       active: 'bg-amber-500/15 text-amber-300 border-amber-500/40',       icon: Clock },
+  { key: 'no_answer',      label: 'No answer',      active: 'bg-white/10 text-gray-200 border-white/20',                icon: PhoneOff },
+  { key: 'voicemail',      label: 'Voicemail',      active: 'bg-white/10 text-gray-200 border-white/20',                icon: Voicemail },
+  { key: 'not_interested', label: 'Not interested', active: 'bg-rose-500/15 text-rose-300 border-rose-500/40',          icon: X },
+  { key: 'wrong_number',   label: 'Wrong #',        active: 'bg-rose-500/15 text-rose-300 border-rose-500/40',          icon: X },
+  { key: 'do_not_call',    label: 'DNC',            active: 'bg-rose-600/25 text-rose-200 border-rose-500/60',          icon: Ban },
 ] as const;
 
 const OUTCOME_LABEL: Record<string, { label: string; tone: string }> = {
@@ -99,18 +101,21 @@ export function QuickCallRow({ c, listId }: { c: C; listId: string }) {
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        {OUTCOMES.map(({ key, label, cls, icon: Icon }) => (
-          <button
-            key={key}
-            onClick={() => log(key)}
-            disabled={busy}
-            className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition ${cls} ${
-              justLogged === key ? 'ring-2 ring-primary' : ''
-            }`}
-          >
-            <Icon className="h-3 w-3" /> {label}
-          </button>
-        ))}
+        {OUTCOMES.map(({ key, label, active, icon: Icon }) => {
+          const isSelected = c.last_call_outcome === key || justLogged === key;
+          return (
+            <button
+              key={key}
+              onClick={() => log(key)}
+              disabled={busy}
+              className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition ${
+                isSelected ? active : BASE_CLS
+              } ${justLogged === key ? 'ring-2 ring-primary' : ''}`}
+            >
+              <Icon className="h-3 w-3" /> {label}
+            </button>
+          );
+        })}
         <button
           onClick={() => setNotesOpen((v) => !v)}
           className="ml-1 inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-gray-300 hover:bg-white/10"
