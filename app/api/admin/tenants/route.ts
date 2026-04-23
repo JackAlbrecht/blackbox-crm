@@ -51,6 +51,11 @@ export async function PATCH(req: Request) {
   if (display_name !== undefined) patch.display_name = display_name || null;
   if (logo_url !== undefined) patch.logo_url = logo_url || null;
   if (primary_color !== undefined) patch.primary_color = primary_color || null;
+  if (body.paused !== undefined) {
+    patch.paused = !!body.paused;
+    patch.paused_at = body.paused ? new Date().toISOString() : null;
+    patch.paused_reason = body.paused ? (body.paused_reason || null) : null;
+  }
 
   const admin = createAdminClient();
   const { data: tenant, error } = await admin
@@ -62,4 +67,27 @@ export async function PATCH(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ tenant });
+}
+
+export async function DELETE(req: Request) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: me } = await supabase.from('profiles').select('is_super_admin').eq('user_id', user.id).maybeSingle();
+  if (!me?.is_super_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  const { id, confirm } = await req.json();
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+  if (confirm !== 'DELETE') {
+    return NextResponse.json({ error: 'confirm value must be "DELETE"' }, { status: 400 });
+  }
+
+  const admin = createAdminClient();
+  // Tenants cascade to everything that references them (contacts, deals, companies, etc.).
+  // Profiles have ON DELETE SET NULL so users remain but lose tenant membership.
+  const { error } = await admin.from('tenants').delete().eq('id', id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ ok: true });
 }

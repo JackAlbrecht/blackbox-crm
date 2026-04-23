@@ -44,10 +44,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const tenant = profile.tenant_id
     ? (await supabase
         .from('tenants')
-        .select('name, slug, display_name, logo_url, logo_wide_url, primary_color, accent_color, tagline')
+        .select('name, slug, display_name, logo_url, logo_wide_url, primary_color, accent_color, tagline, paused, paused_reason')
         .eq('id', profile.tenant_id)
         .maybeSingle()).data
     : null;
+
+  // If the workspace is paused (e.g. lapsed subscription), block access for
+  // everyone except the Blackbox super admin. Data is preserved.
+  if (tenant && (tenant as any).paused && !profile.is_super_admin) {
+    redirect('/denied?reason=paused');
+  }
 
   const FALLBACK_PRIMARY = '#8b5cf6';
   const FALLBACK_ACCENT  = '#22d3ee';

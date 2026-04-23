@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, Loader2, Users } from 'lucide-react';
+import { Plus, Trash2, Loader2, Users, Pause, Play, AlertTriangle } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
 type Tenant = {
@@ -11,6 +11,9 @@ type Tenant = {
   display_name?: string | null;
   logo_url?: string | null;
   primary_color?: string | null;
+  paused?: boolean;
+  paused_at?: string | null;
+  paused_reason?: string | null;
 };
 type Member = { id: string; email: string; tenant_id: string | null; tenant_name?: string; created_at: string };
 
@@ -223,12 +226,52 @@ function TenantRow({ tenant, onSaved }: { tenant: Tenant; onSaved: () => Promise
             <div className="text-xs text-gray-500">{tenant.slug}</div>
           </div>
         </div>
-        <button
-          onClick={() => setOpen((v) => !v)}
-          className="text-xs text-gray-400 hover:text-primary"
-        >
-          {open ? 'Close' : 'Edit branding'}
-        </button>
+        <div className="flex items-center gap-2">
+          {tenant.paused && (
+            <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] uppercase tracking-wider text-amber-400">
+              <Pause className="h-3 w-3" /> Paused
+            </span>
+          )}
+          <button
+            onClick={async () => {
+              const reason = tenant.paused ? null : prompt('Reason for pausing (optional — shown to the user):') || '';
+              if (!tenant.paused && reason === null) return;
+              const r = await fetch('/api/admin/tenants', {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: tenant.id, paused: !tenant.paused, paused_reason: reason }),
+              });
+              if (!r.ok) { alert((await r.json()).error || 'Failed'); return; }
+              await onSaved();
+            }}
+            className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs transition ${
+              tenant.paused ? 'border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10'
+                            : 'border-amber-500/40 text-amber-400 hover:bg-amber-500/10'
+            }`}
+          >
+            {tenant.paused ? <><Play className="h-3 w-3" /> Resume</> : <><Pause className="h-3 w-3" /> Pause</>}
+          </button>
+          <button
+            onClick={async () => {
+              const s = prompt(`DELETE workspace "${tenant.name}"? This permanently removes every contact, deal, company, and activity for this tenant and CANNOT be undone. Type DELETE to confirm:`);
+              if (s !== 'DELETE') return;
+              const r = await fetch('/api/admin/tenants', {
+                method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: tenant.id, confirm: 'DELETE' }),
+              });
+              if (!r.ok) { alert((await r.json()).error || 'Failed'); return; }
+              await onSaved();
+            }}
+            className="inline-flex items-center gap-1 rounded-md border border-danger/40 px-2 py-1 text-xs text-danger hover:bg-danger/10"
+          >
+            <Trash2 className="h-3 w-3" /> Delete
+          </button>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="text-xs text-gray-400 hover:text-primary"
+          >
+            {open ? 'Close' : 'Edit branding'}
+          </button>
+        </div>
       </div>
 
       {open && (
