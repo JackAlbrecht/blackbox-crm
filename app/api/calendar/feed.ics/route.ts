@@ -38,7 +38,7 @@ export async function GET(req: Request) {
   const [{ data: bookings }, { data: meetings }, { data: tenantRow }] = await Promise.all([
     admin.from('call_logs').select('id, contact_id, outcome, notes, next_action_at').eq('tenant_id', tenantId).eq('outcome', 'booked').gte('next_action_at', from).lte('next_action_at', to),
     admin.from('activities').select('id, contact_id, subject, body, occurred_at, duration_sec').eq('tenant_id', tenantId).eq('activity_type', 'meeting').gte('occurred_at', from).lte('occurred_at', to),
-    admin.from('tenants').select('name, display_name').eq('id', tenantId).maybeSingle(),
+    admin.from('tenants').select('name, display_name, meeting_location, meeting_phone, meeting_description').eq('id', tenantId).maybeSingle(),
   ]);
 
   // Resolve contact names for readable subjects
@@ -66,7 +66,11 @@ export async function GET(req: Request) {
     const title = name ? `${subject || 'Meeting'} — ${name}${c?.company ? ' · ' + c.company : ''}` : (subject || 'Meeting');
     const descParts = [] as string[];
     if (notes) descParts.push(notes);
-    if (c?.phone) descParts.push(`Phone: ${c.phone}`);
+    const t: any = tenantRow || {};
+    if (t.meeting_description) descParts.push(t.meeting_description);
+    if (t.meeting_location) descParts.push(`Join meeting: ${t.meeting_location}`);
+    if (t.meeting_phone) descParts.push(t.meeting_phone);
+    if (c?.phone) descParts.push(`Customer phone: ${c.phone}`);
     descParts.push(`Open in CRM: https://crm.blackboxadvancements.com/contacts/${contactId}`);
     const end = new Date(new Date(at).getTime() + duration_min * 60 * 1000).toISOString();
     lines.push('BEGIN:VEVENT');
@@ -75,6 +79,8 @@ export async function GET(req: Request) {
     lines.push(`DTSTART:${toICSDate(at)}`);
     lines.push(`DTEND:${toICSDate(end)}`);
     lines.push(`SUMMARY:${escICS(title)}`);
+    const t2: any = tenantRow || {};
+    if (t2.meeting_location) lines.push(`LOCATION:${escICS(t2.meeting_location)}`);
     lines.push(`DESCRIPTION:${escICS(descParts.join('\\n'))}`);
     if (contactId) lines.push(`URL:https://crm.blackboxadvancements.com/contacts/${contactId}`);
     lines.push('END:VEVENT');

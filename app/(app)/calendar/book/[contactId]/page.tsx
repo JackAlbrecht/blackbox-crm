@@ -13,12 +13,15 @@ export default async function BookPage({
   searchParams: { list?: string; back?: string };
 }) {
   const supabase = createClient();
-  const { data: contact } = await supabase
-    .from('contacts')
-    .select('id, first_name, last_name, email, phone, company, notes, primary_company_id')
-    .eq('id', params.contactId)
-    .maybeSingle();
+  const [{ data: contact }, { data: { user } }] = await Promise.all([
+    supabase.from('contacts').select('id, first_name, last_name, email, phone, company, notes, primary_company_id').eq('id', params.contactId).maybeSingle(),
+    supabase.auth.getUser(),
+  ]);
   if (!contact) notFound();
+  const { data: profile } = user ? await supabase.from('profiles').select('tenant_id').eq('user_id', user.id).maybeSingle() : { data: null } as any;
+  const { data: tenant } = profile?.tenant_id
+    ? await supabase.from('tenants').select('meeting_location, meeting_phone, meeting_description').eq('id', profile.tenant_id).maybeSingle()
+    : { data: null } as any;
 
   const backHref = searchParams.back || (searchParams.list ? `/lead-lists/${searchParams.list}` : '/calendar');
   const name = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || contact.email || 'Unnamed';
@@ -60,7 +63,7 @@ export default async function BookPage({
 
       <section className="card p-6">
         <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">When</h2>
-        <BookingForm contactId={contact.id} listId={searchParams.list || null} backHref={backHref} />
+        <BookingForm contactId={contact.id} listId={searchParams.list || null} backHref={backHref} template={tenant as any} />
       </section>
     </div>
   );

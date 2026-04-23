@@ -15,6 +15,9 @@ type Tenant = {
   logo_wide_url?: string | null;
   favicon_url?: string | null;
   login_bg_url?: string | null;
+  meeting_location?: string | null;
+  meeting_phone?: string | null;
+  meeting_description?: string | null;
 };
 
 const PRESETS: { name: string; primary: string; accent: string }[] = [
@@ -38,6 +41,9 @@ export function BrandingEditor({ tenant, canEditLogo = true }: { tenant: Tenant;
   const [logoWideUrl,   setLogoWideUrl]   = useState(tenant.logo_wide_url || '');
   const [faviconUrl,    setFaviconUrl]    = useState(tenant.favicon_url   || '');
   const [loginBgUrl,    setLoginBgUrl]    = useState(tenant.login_bg_url  || '');
+  const [meetLocation,  setMeetLocation]  = useState(tenant.meeting_location    || '');
+  const [meetPhone,     setMeetPhone]     = useState(tenant.meeting_phone       || '');
+  const [meetDesc,      setMeetDesc]      = useState(tenant.meeting_description || '');
   const [status, setStatus] = useState<{ type: 'ok' | 'err'; msg: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -54,6 +60,9 @@ export function BrandingEditor({ tenant, canEditLogo = true }: { tenant: Tenant;
         accent_color:  accentColor  || null,
         logo_url:      logoUrl      || null,
         logo_wide_url: logoWideUrl  || null,
+        meeting_location:    meetLocation || null,
+        meeting_phone:       meetPhone    || null,
+        meeting_description: meetDesc     || null,
         favicon_url:   faviconUrl   || null,
         login_bg_url:  loginBgUrl   || null,
       }),
@@ -167,6 +176,22 @@ export function BrandingEditor({ tenant, canEditLogo = true }: { tenant: Tenant;
             </div>
           )}
 
+          <div className="mt-4 rounded-lg border border-border bg-black/20 p-4 space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-wider text-primary">Meeting template</div>
+            <p className="text-[11px] text-gray-500">Pasted into every booking description + ICS/Google Calendar event so each appointment already has your link + dial-in info.</p>
+            <div>
+              <label className="label">Meeting link (Google Meet / Zoom / Teams URL)</label>
+              <input className="input" placeholder="https://meet.google.com/abc-defg-hij" value={meetLocation} onChange={(e) => setMeetLocation(e.target.value)} />
+            </div>
+            <div>
+              <label className="label">Phone dial-in (optional)</label>
+              <input className="input" placeholder="Join by phone: +1 555-123-4567 · PIN 123 456#" value={meetPhone} onChange={(e) => setMeetPhone(e.target.value)} />
+            </div>
+            <div>
+              <label className="label">Default description</label>
+              <textarea rows={4} className="input" placeholder="Agenda, links, whatever should always be on these calendar events" value={meetDesc} onChange={(e) => setMeetDesc(e.target.value)} />
+            </div>
+          </div>
           <button disabled={saving} onClick={save} className="btn btn-primary">
             {saving ? 'Saving…' : 'Save branding'}
           </button>

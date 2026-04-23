@@ -37,6 +37,9 @@ export async function PATCH(req: Request) {
   const logo_wide_url  = clean(body.logo_wide_url);
   const favicon_url    = clean(body.favicon_url);
   const login_bg_url   = clean(body.login_bg_url);
+  const meeting_location    = clean(body.meeting_location);
+  const meeting_phone       = clean(body.meeting_phone);
+  const meeting_description = clean(body.meeting_description);
 
   if (primary_color && !HEX.test(primary_color)) {
     return NextResponse.json({ error: 'Primary color must be a hex like #8b5cf6' }, { status: 400 });
@@ -62,12 +65,15 @@ export async function PATCH(req: Request) {
   if (body.logo_wide_url  !== undefined) patch.logo_wide_url  = logo_wide_url;
   if (body.favicon_url    !== undefined) patch.favicon_url    = favicon_url;
   if (body.login_bg_url   !== undefined) patch.login_bg_url   = login_bg_url;
+  if (body.meeting_location    !== undefined) patch.meeting_location    = meeting_location;
+  if (body.meeting_phone       !== undefined) patch.meeting_phone       = meeting_phone;
+  if (body.meeting_description !== undefined) patch.meeting_description = meeting_description;
 
   const { data, error } = await admin
     .from('tenants')
     .update(patch)
     .eq('id', targetTenantId)
-    .select('id, name, display_name, tagline, primary_color, accent_color, logo_url, logo_wide_url, favicon_url, login_bg_url')
+    .select('id, name, display_name, tagline, primary_color, accent_color, logo_url, logo_wide_url, favicon_url, login_bg_url, meeting_location, meeting_phone, meeting_description')
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
