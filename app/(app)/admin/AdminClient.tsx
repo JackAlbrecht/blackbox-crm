@@ -25,6 +25,7 @@ export function AdminClient() {
 
   const [mEmail, setMEmail] = useState('');
   const [mTenant, setMTenant] = useState('');
+  const [mPassword, setMPassword] = useState('');
   const [addingMember, setAddingMember] = useState(false);
   const [inviteStatus, setInviteStatus] = useState<string | null>(null);
 
@@ -62,14 +63,16 @@ export function AdminClient() {
     setErr(null);
     const r = await fetch('/api/admin/members', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: mEmail, tenant_id: mTenant }),
+      body: JSON.stringify({ email: mEmail, tenant_id: mTenant, password: mPassword || undefined }),
     });
     const d = await r.json().catch(() => ({}));
     setAddingMember(false);
     if (!r.ok) { setErr(d.error || 'Failed to add member'); return; }
 
     // Surface the invite result so the admin knows whether an email actually went out.
-    if (d.status === 'invite_sent') {
+    if (d.status === 'password_set') {
+      setInviteStatus(`Access granted. Share these credentials: ${mEmail} / ${mPassword}. They can sign in at /login.`);
+    } else if (d.status === 'invite_sent') {
       setInviteStatus(`Invite email sent to ${mEmail}. They'll click the link to set a password.`);
     } else if (d.status === 'existing_user_reset_sent') {
       setInviteStatus(`${mEmail} already has an account — a password reset email was sent.`);
@@ -78,6 +81,7 @@ export function AdminClient() {
     }
 
     setMEmail('');
+    setMPassword('');
     await load();
   }
 
@@ -113,8 +117,9 @@ export function AdminClient() {
 
       <section className="card p-6">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">Members</h2>
-        <form onSubmit={addMember} className="mt-4 grid gap-2 md:grid-cols-[1fr_1fr_auto]">
+        <form onSubmit={addMember} className="mt-4 grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto]">
           <input required type="email" className="input" placeholder="email@company.com" value={mEmail} onChange={(e) => setMEmail(e.target.value)} />
+          <input type="text" className="input" placeholder="Password (optional, min 6)" value={mPassword} onChange={(e) => setMPassword(e.target.value)} autoComplete="new-password" />
           <select className="input" value={mTenant} onChange={(e) => setMTenant(e.target.value)}>
             {tenants.map((t) => (<option key={t.id} value={t.id}>{t.name}</option>))}
           </select>
@@ -123,6 +128,7 @@ export function AdminClient() {
             Grant access
           </button>
         </form>
+        <p className="mt-2 text-xs text-gray-500">Leave password blank to email them an invite. Set a password to create their account instantly so you can share the credentials directly.</p>
 
         {inviteStatus && (
           <div className="mt-3 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary">

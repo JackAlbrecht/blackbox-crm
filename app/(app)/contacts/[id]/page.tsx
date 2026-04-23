@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { ContactForm } from '@/components/forms/ContactForm';
+import { LogCallWidget } from '@/components/calls/LogCallWidget';
+import { CallHistory } from '@/components/calls/CallHistory';
 import { ArrowLeft } from 'lucide-react';
 
 export default async function ContactDetail({ params }: { params: { id: string } }) {
@@ -10,8 +12,15 @@ export default async function ContactDetail({ params }: { params: { id: string }
     .from('contacts').select('*').eq('id', params.id).maybeSingle();
   if (!contact) notFound();
 
+  const { data: calls } = await supabase
+    .from('call_logs')
+    .select('id, outcome, notes, called_at, next_action_at, caller_id, list_id')
+    .eq('contact_id', params.id)
+    .order('called_at', { ascending: false })
+    .limit(50);
+
   return (
-    <div className="max-w-3xl animate-fade-in">
+    <div className="animate-fade-in">
       <Link href="/contacts" className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-primary">
         <ArrowLeft className="h-4 w-4" /> Back to contacts
       </Link>
@@ -21,8 +30,17 @@ export default async function ContactDetail({ params }: { params: { id: string }
         </h1>
         <p className="mt-1 text-sm text-gray-400">{contact.company || 'Contact details'}</p>
       </header>
-      <div className="card p-6">
-        <ContactForm contact={contact} />
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+        <div className="card p-6">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Details</h2>
+          <ContactForm contact={contact} />
+        </div>
+
+        <div className="space-y-6">
+          <LogCallWidget contactId={contact.id} phone={contact.phone} />
+          <CallHistory calls={calls || []} />
+        </div>
       </div>
     </div>
   );

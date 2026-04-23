@@ -25,9 +25,14 @@ export async function POST(req: Request) {
   const auth = await requireSuperAdmin();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { email, tenant_id } = await req.json();
+  const { email, tenant_id, password } = await req.json();
   if (!email || !tenant_id) {
     return NextResponse.json({ error: 'Email and tenant_id required' }, { status: 400 });
+  }
+
+  const hasPassword = typeof password === 'string' && password.length > 0;
+  if (hasPassword && password.length < 6) {
+    return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
   }
 
   const admin = createAdminClient();
@@ -42,9 +47,59 @@ export async function POST(req: Request) {
     .select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // 2) If a profile already exists (user has signed in before), activate them
-  //    and bind them to the new tenant. Then send them a password-reset email
-  //    so they can re-set if they want.
+  // Helper: find existing auth user by email via admin API.
+  async function findAuthUserByEmail(e: string) {
+    // listUsers supports filtering; fetch first page and scan (small tenancy).
+    const { data } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+    return data?.users?.find((u) => (u.email || '').toLowerCase() === e) || null;
+  }
+
+  // Branch A: super admin supplied a password — create or update user directly, no email.
+  if (hasPassword) {
+    const existingAuth = await findAuthUserByEmail(normalized);
+
+    if (existingAuth) {
+      const { error: updErr } = await admin.auth.admin.updateUserById(existingAuth.id, {
+        password,
+        email_confirm: true,
+      });
+      if (updErr) {
+        return NextResponse.json({
+          member: row,
+          status: 'password_update_failed',
+          message: updErr.message,
+        }, { status: 500 });
+      }
+    } else {
+      const { error: createErr } = await admin.auth.admin.createUser({
+        email: normalized,
+        password,
+        email_confirm: true,
+      });
+      if (createErr) {
+        return NextResponse.json({
+          member: row,
+          status: 'user_create_failed',
+          message: createErr.message,
+        }, { status: 500 });
+      }
+    }
+
+    // Ensure the profile is active and bound to this tenant. The handle_new_user
+    // trigger creates the profile row automatically; this UPDATE is a belt-and-
+    // suspenders for previously-existing users.
+    await admin.from('profiles')
+      .update({ tenant_id, active: true })
+      .eq('email', normalized);
+
+    return NextResponse.json({
+      member: row,
+      status: 'password_set',
+      email: normalized,
+    });
+  }
+
+  // Branch B: no password supplied — existing behavior (email invite / recovery).
   const { data: existingProfile } = await admin
     .from('profiles')
     .select('user_id, email')
@@ -56,7 +111,6 @@ export async function POST(req: Request) {
       .update({ tenant_id, active: true })
       .eq('email', normalized);
 
-    // Send them a recovery (set-password) email.
     const { error: rErr } = await admin.auth.admin.generateLink({
       type: 'recovery',
       email: normalized,
@@ -70,7 +124,6 @@ export async function POST(req: Request) {
     });
   }
 
-  // 3) Brand-new user: send them an invite email (Supabase sends the mail via SMTP).
   const { error: invErr } = await admin.auth.admin.inviteUserByEmail(normalized, {
     redirectTo,
   });
@@ -98,7 +151,6 @@ export async function DELETE(req: Request) {
 
   const admin = createAdminClient();
 
-  // Find the row first so we can revoke the corresponding profile
   const { data: row } = await admin.from('allowed_members')
     .select('email').eq('id', id).maybeSingle();
 
@@ -106,7 +158,6 @@ export async function DELETE(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   if (row?.email) {
-    // Revoke access: deactivate profile (keeps the auth user + history intact).
     await admin.from('profiles')
       .update({ active: false, tenant_id: null })
       .eq('email', row.email);
