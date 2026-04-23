@@ -1,7 +1,9 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Clock, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Users, Plus } from 'lucide-react';
+import { CalendarEventModal } from '@/components/calendar/EventModal';
+import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/utils';
 
 type Event = { id: string; type: string; subject: string | null; at: string; duration?: number | null; contact_id?: string | null; notes?: string | null };
@@ -10,6 +12,9 @@ export function CalendarView({ year, month, events }: { year: number; month: num
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [feedUrl, setFeedUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalDay, setModalDay] = useState<string | null>(null);
+  const router = useRouter();
 
   async function reveal() {
     if (feedUrl) { navigator.clipboard.writeText(feedUrl).catch(()=>{}); setCopied(true); setTimeout(() => setCopied(false), 1500); return; }
@@ -51,6 +56,7 @@ export function CalendarView({ year, month, events }: { year: number; month: num
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="card p-4">
         <div className="mb-2 flex items-center justify-end gap-2 px-2">
+          <button onClick={() => { setModalDay(null); setModalOpen(true); }} className="inline-flex items-center gap-1.5 rounded-md border border-primary/60 bg-primary/15 px-3 py-1.5 text-xs text-white hover:bg-primary/25"><Plus className="h-3.5 w-3.5" /> New event</button>
           <button onClick={reveal} className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs text-primary hover:bg-primary/20" title="Copy a subscribe URL to use in Google / Apple / Outlook Calendar">
             {copied ? 'Copied ✓' : (feedUrl ? 'Copy subscribe URL again' : 'Subscribe in Google Calendar')}
           </button>
@@ -74,6 +80,8 @@ export function CalendarView({ year, month, events }: { year: number; month: num
                 key={key}
                 disabled={!day}
                 onClick={() => day && setSelectedDay(key)}
+                onDoubleClick={() => { if (day) { setModalDay(key); setModalOpen(true); } }}
+                title={day ? 'Click to view agenda, double-click to add an event' : ''}
                 className={`min-h-[76px] rounded-md border p-1.5 text-left transition ${
                   !day ? 'invisible' :
                   isSelected ? 'border-primary/60 bg-primary/10' :
@@ -101,9 +109,16 @@ export function CalendarView({ year, month, events }: { year: number; month: num
       </div>
 
       <aside className="card space-y-3 p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
           {selectedDay ? new Date(selectedDay + 'T00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }) : 'Agenda'}
-        </h2>
+          </h2>
+          {selectedDay && (
+            <button onClick={() => { setModalDay(selectedDay); setModalOpen(true); }} className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-1 text-xs text-primary hover:bg-primary/20">
+              <Plus className="h-3 w-3" /> Add
+            </button>
+          )}
+        </div>
         {!selectedDay && (
           <p className="text-xs text-gray-500">Click a day on the calendar to see its meetings and booked appointments here.</p>
         )}
@@ -124,6 +139,7 @@ export function CalendarView({ year, month, events }: { year: number; month: num
           </ul>
         )}
       </aside>
+      <CalendarEventModal open={modalOpen} onClose={() => setModalOpen(false)} onSaved={() => router.refresh()} defaultDate={modalDay || undefined} />
     </div>
   );
 }
