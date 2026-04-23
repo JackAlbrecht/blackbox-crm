@@ -261,9 +261,9 @@ function TenantRow({ tenant, onSaved }: { tenant: Tenant; onSaved: () => Promise
               if (!r.ok) { alert((await r.json()).error || 'Failed'); return; }
               await onSaved();
             }}
-            className="inline-flex items-center gap-1 rounded-md border border-danger/40 px-2 py-1 text-xs text-danger hover:bg-danger/10"
+            className="inline-flex items-center gap-1.5 rounded-md border border-danger/60 bg-danger/10 px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger hover:text-white transition"
           >
-            <Trash2 className="h-3 w-3" /> Delete
+            <Trash2 className="h-3.5 w-3.5" /> Delete workspace
           </button>
           <button
             onClick={() => setOpen((v) => !v)}
