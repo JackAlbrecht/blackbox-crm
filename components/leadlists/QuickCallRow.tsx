@@ -9,6 +9,7 @@ import { formatDate } from '@/lib/utils';
 type C = {
   id: string; first_name: string | null; last_name: string | null;
   email: string | null; phone: string | null; company: string | null;
+  notes: string | null;
   last_call_at: string | null; last_call_outcome: string | null;
   next_follow_up_at: string | null;
 };
@@ -99,6 +100,13 @@ export function QuickCallRow({ c, listId }: { c: C; listId: string }) {
           </div>
         </div>
       </div>
+
+      {c.notes && (
+        <div className="mt-3 rounded-md border-l-4 border-primary/60 bg-primary/5 px-3 py-2 text-sm text-gray-200 whitespace-pre-wrap">
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-primary/80">Context · what they need</div>
+          {c.notes}
+        </div>
+      )}
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         {OUTCOMES.map(({ key, label, active, icon: Icon }) => {

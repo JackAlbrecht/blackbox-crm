@@ -29,7 +29,7 @@ export default async function LeadListDetail({ params }: { params: { id: string 
 
   const { data: rows } = await supabase
     .from('contact_lists')
-    .select('contact:contacts!inner(id, first_name, last_name, email, phone, company, last_call_at, last_call_outcome, next_follow_up_at)')
+    .select('contact:contacts!inner(id, first_name, last_name, email, phone, company, notes, last_call_at, last_call_outcome, next_follow_up_at)')
     .eq('list_id', params.id)
     .limit(500);
 
@@ -58,7 +58,7 @@ export default async function LeadListDetail({ params }: { params: { id: string 
           {list.source && <span className="uppercase tracking-wider text-[11px] text-gray-500">{list.source}</span>}
           <span>Created {formatDate(list.created_at)}</span>
         </div>
-        {list.description && <p className="mt-3 text-sm text-gray-300">{list.description}</p>}
+
       </header>
 
       <div className="card p-5 space-y-3">
@@ -79,6 +79,12 @@ export default async function LeadListDetail({ params }: { params: { id: string 
         </div>
       </div>
 
+      {list.description && (
+        <div className="card border-l-4 border-primary/60 p-5">
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-primary">Caller script / list notes</div>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-200">{list.description}</p>
+        </div>
+      )}
       <LeadListView contacts={contacts as any} listId={params.id} />
         </div>
   );
