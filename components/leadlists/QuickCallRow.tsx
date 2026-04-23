@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Phone, Mail, MessageSquare, Check, PhoneOff, Voicemail, Clock, Ban, X, Loader2 } from 'lucide-react';
+import { Phone, Mail, MessageSquare, Check, PhoneOff, Voicemail, Clock, Ban, X, Loader2, RotateCcw } from 'lucide-react';
 import { BookingModal } from './BookingModal';
 import { formatDate } from '@/lib/utils';
 
@@ -63,6 +63,14 @@ export function QuickCallRow({ c, listId }: { c: C; listId: string }) {
     router.refresh();
   }
 
+  async function undo() {
+    setBusy(true);
+    await fetch(`/api/contacts/${c.id}/calls`, { method: 'DELETE' });
+    setBusy(false);
+    setJustLogged(null);
+    router.refresh();
+  }
+
   const name = [c.first_name, c.last_name].filter(Boolean).join(' ') || '(no name)';
   const meta = c.last_call_outcome ? OUTCOME_LABEL[c.last_call_outcome] : null;
 
@@ -116,7 +124,11 @@ export function QuickCallRow({ c, listId }: { c: C; listId: string }) {
           return (
             <button
               key={key}
-              onClick={() => key === 'booked' ? setBookingOpen(true) : log(key)}
+              onClick={() => {
+                if (c.last_call_outcome === key) { undo(); return; }
+                if (key === 'booked') { setBookingOpen(true); return; }
+                log(key);
+              }}
               disabled={busy}
               className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition ${
                 isSelected ? active : BASE_CLS
@@ -126,6 +138,16 @@ export function QuickCallRow({ c, listId }: { c: C; listId: string }) {
             </button>
           );
         })}
+        {c.last_call_outcome && (
+          <button
+            onClick={undo}
+            disabled={busy}
+            className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-gray-300 hover:text-white hover:bg-white/10"
+            title="Undo last outcome"
+          >
+            <RotateCcw className="h-3 w-3" /> Undo
+          </button>
+        )}
         <button
           onClick={() => setNotesOpen((v) => !v)}
           className="ml-1 inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-gray-300 hover:bg-white/10"

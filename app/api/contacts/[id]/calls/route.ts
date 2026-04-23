@@ -65,3 +65,47 @@ export async function GET(
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ calls: data || [] });
 }
+
+
+// DELETE /api/contacts/[id]/calls — removes the most recent call_log for this contact
+// (used by the Undo button in the lead-list QuickCallRow). Recomputes denormalized
+// last_call_* fields on the contact so the UI and activity feed stay consistent.
+export async function DELETE(
+  _req: Request,
+  { params }: { params: { id: string } },
+) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: latest } = await supabase
+    .from('call_logs')
+    .select('id')
+    .eq('contact_id', params.id)
+    .order('called_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!latest) return NextResponse.json({ ok: true, deleted: 0 });
+
+  const { error: delErr } = await supabase.from('call_logs').delete().eq('id', latest.id);
+  if (delErr) return NextResponse.json({ error: delErr.message }, { status: 400 });
+
+  // Recompute the denormalized last_call_* fields on contacts from whatever call log
+  // now sits at the top (or clear them if none remain).
+  const { data: next } = await supabase
+    .from('call_logs')
+    .select('called_at, outcome, next_action_at')
+    .eq('contact_id', params.id)
+    .order('called_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  await supabase.from('contacts').update({
+    last_call_at:      next?.called_at      ?? null,
+    last_call_outcome: next?.outcome        ?? null,
+    next_follow_up_at: next?.next_action_at ?? null,
+    updated_at: new Date().toISOString(),
+  }).eq('id', params.id);
+
+  return NextResponse.json({ ok: true, deleted: 1 });
+}
