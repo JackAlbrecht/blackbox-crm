@@ -21,9 +21,11 @@ export default async function DealDetail({ params }: { params: { id: string } })
     .maybeSingle();
   if (error || !deal) notFound();
 
-  const [{ data: stages }, { data: activities }] = await Promise.all([
+  const [{ data: stages }, { data: activities }, { data: contacts }, { data: companies }] = await Promise.all([
     supabase.from('deal_stages').select('id, name, position, color, win_probability').order('position'),
     supabase.from('activities').select('*').eq('deal_id', params.id).order('occurred_at', { ascending: false }).limit(50),
+    supabase.from('contacts').select('id, first_name, last_name, email, company, phone').order('first_name').limit(2000),
+    supabase.from('companies').select('id, name, domain').order('name').limit(1000).then((r) => r.error ? { data: [] as any[] } : r),
   ]);
 
   const probability = (deal as any).probability || (deal as any).stage?.win_probability || 0;
@@ -64,7 +66,7 @@ export default async function DealDetail({ params }: { params: { id: string } })
         <div className="space-y-6 lg:col-span-2">
           <section className="card p-6">
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Details</h2>
-            <DealEditor initial={deal} stages={stages || []} />
+            <DealEditor initial={deal} stages={stages || []} contacts={contacts || []} companies={companies || []} />
           </section>
 
           <section className="card p-6 space-y-6">
