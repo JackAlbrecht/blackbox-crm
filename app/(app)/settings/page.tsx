@@ -23,7 +23,7 @@ export default async function Settings() {
         <p className="mt-1 text-sm text-gray-400">Your profile, workspace, and branding.</p>
       </header>
 
-      {canEditBranding && tenant && <BrandingEditor tenant={tenant as any} />}
+      {canEditBranding && tenant && <BrandingEditor tenant={tenant as any} canEditLogo={!!profile?.is_super_admin} />}
 
       <SettingsClient profile={profile!} tenant={tenant} stages={stages || []} />
     </div>

@@ -28,7 +28,7 @@ const PRESETS: { name: string; primary: string; accent: string }[] = [
   { name: 'Graphite', primary: '#475569', accent: '#94a3b8' },
 ];
 
-export function BrandingEditor({ tenant }: { tenant: Tenant }) {
+export function BrandingEditor({ tenant, canEditLogo = true }: { tenant: Tenant; canEditLogo?: boolean }) {
   const router = useRouter();
   const [displayName,   setDisplayName]   = useState(tenant.display_name || tenant.name || '');
   const [tagline,       setTagline]       = useState(tenant.tagline || '');
@@ -140,26 +140,32 @@ export function BrandingEditor({ tenant }: { tenant: Tenant }) {
             </div>
           </div>
 
-          <div>
-            <label className="label">Wide logo URL (horizontal, sidebar hero)</label>
-            <input className="input" value={logoWideUrl} onChange={e => setLogoWideUrl(e.target.value)} placeholder="https://evergreenepoxyflooring.com/logo.png" />
-            <p className="mt-1 text-[11px] text-gray-500">Best at 600–900px wide, transparent PNG or SVG. Shown at 56px tall.</p>
-          </div>
-
-          <div>
-            <label className="label">Square logo URL (fallback + topbar)</label>
-            <input className="input" value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://example.com/icon.png" />
-          </div>
-
-          <div>
-            <label className="label">Favicon URL (browser tab icon)</label>
-            <input className="input" value={faviconUrl} onChange={e => setFaviconUrl(e.target.value)} placeholder="https://example.com/favicon.png" />
-          </div>
-
-          <div>
-            <label className="label">Login page background (optional)</label>
-            <input className="input" value={loginBgUrl} onChange={e => setLoginBgUrl(e.target.value)} placeholder="https://example.com/hero.jpg" />
-          </div>
+          {canEditLogo ? (
+            <>
+              <div>
+                <label className="label">Wide logo URL (horizontal, sidebar hero)</label>
+                <input className="input" value={logoWideUrl} onChange={e => setLogoWideUrl(e.target.value)} placeholder="https://evergreenepoxyflooring.com/logo.png" />
+                <p className="mt-1 text-[11px] text-gray-500">Best at 600–900px wide, transparent PNG or SVG. Shown at 56px tall.</p>
+              </div>
+              <div>
+                <label className="label">Square logo URL (fallback + topbar)</label>
+                <input className="input" value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://example.com/icon.png" />
+              </div>
+              <div>
+                <label className="label">Favicon URL (browser tab icon)</label>
+                <input className="input" value={faviconUrl} onChange={e => setFaviconUrl(e.target.value)} placeholder="https://example.com/favicon.png" />
+              </div>
+              <div>
+                <label className="label">Login page background (optional)</label>
+                <input className="input" value={loginBgUrl} onChange={e => setLoginBgUrl(e.target.value)} placeholder="https://example.com/hero.jpg" />
+              </div>
+            </>
+          ) : (
+            <div className="rounded-md border border-border bg-black/20 p-3 text-xs text-gray-500">
+              Your workspace logo, favicon, and login background are managed by your Blackbox administrator.
+              If you want to change any of those, reach out and they'll update it. You can still tweak colors and tagline here.
+            </div>
+          )}
 
           <button disabled={saving} onClick={save} className="btn btn-primary">
             {saving ? 'Saving…' : 'Save branding'}

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/client';
 import { MobileNav } from './MobileNav';
 import { NotificationsBell } from './NotificationsBell';
+import { ThemeToggle } from './ThemeToggle';
 import { LogOut, ChevronDown, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -52,6 +53,7 @@ export function TopBar({
       </div>
 
       <div className="flex items-center gap-2">
+        <ThemeToggle />
         <NotificationsBell />
         <div className="relative">
         <button

@@ -82,7 +82,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="flex min-h-screen" style={themeStyle}>
+    <div className="flex min-h-screen relative" style={themeStyle}>
+      <div className="mesh-bg" aria-hidden="true" />
       <Sidebar
         isSuperAdmin={!!profile.is_super_admin}
         isTenantAdmin={!!profile.is_tenant_admin}

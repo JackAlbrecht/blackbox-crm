@@ -78,3 +78,100 @@ body {
 ::-webkit-scrollbar-track { background: #05060c; }
 ::-webkit-scrollbar-thumb { background: rgba(var(--primary-rgb), 0.25); border-radius: 6px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(var(--primary-rgb), 0.45); }
+
+/* ================================================================
+ * Light / dark mode
+ * ================================================================
+ * Theme is decided by `data-theme="light"` on <html>. Default is dark.
+ */
+html[data-theme="light"] {
+  color-scheme: light;
+}
+html[data-theme="light"] body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(var(--primary-rgb), 0.08), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(var(--accent-rgb), 0.06), transparent 55%),
+    #fafbff;
+  color: #18181b;
+}
+html[data-theme="light"] .card {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+html[data-theme="light"] .input {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+html[data-theme="light"] .input::placeholder { color: #94a3b8; }
+html[data-theme="light"] .label { color: #475569; }
+html[data-theme="light"] .btn-ghost { color: #0f172a; border-color: rgba(15, 23, 42, 0.12); }
+html[data-theme="light"] .table-row { border-color: rgba(15, 23, 42, 0.08); }
+html[data-theme="light"] .pill { color: var(--primary); }
+html[data-theme="light"] aside { background: rgba(255, 255, 255, 0.75) !important; }
+html[data-theme="light"] header.sticky { background: rgba(255, 255, 255, 0.8) !important; }
+html[data-theme="light"] ::-webkit-scrollbar-track { background: #f1f5f9; }
+
+/* ================================================================
+ * Global mesh gradient background — subtle animated aurora behind everything.
+ * ================================================================ */
+.mesh-bg {
+  position: fixed; inset: 0; z-index: -10; pointer-events: none;
+  background:
+    radial-gradient(50% 40% at 10% 20%, rgba(var(--primary-rgb), 0.22), transparent 60%),
+    radial-gradient(45% 50% at 90% 30%, rgba(var(--accent-rgb), 0.16), transparent 60%),
+    radial-gradient(60% 40% at 50% 110%, rgba(var(--primary-rgb), 0.12), transparent 60%);
+  filter: blur(40px);
+  animation: meshShift 24s ease-in-out infinite;
+}
+html[data-theme="light"] .mesh-bg {
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+}
+@keyframes meshShift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(-3%, 2%, 0) scale(1.06); }
+}
+
+/* ================================================================
+ * Card hover lift + shimmer on mount
+ * ================================================================ */
+.card { transition: transform .25s ease, border-color .25s ease, box-shadow .3s ease; }
+.card:hover { transform: translateY(-1px); border-color: rgba(var(--primary-rgb), 0.3); }
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: riseIn .45s cubic-bezier(.2, .7, .2, 1) both; }
+
+/* Pulsing glyph for empty states */
+.glyph-pulse { animation: glyphPulse 3s ease-in-out infinite; }
+@keyframes glyphPulse {
+  0%, 100% { opacity: .45; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.08); }
+}
+
+/* Gradient text for hero headlines */
+.gradient-text {
+  background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 50%, var(--primary) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradShift 6s ease-in-out infinite;
+}
+@keyframes gradShift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* Spark glow on primary buttons */
+.btn-primary { position: relative; overflow: hidden; }
+.btn-primary::after {
+  content: ''; position: absolute; top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  transition: left .6s ease;
+}
+.btn-primary:hover::after { left: 100%; }
